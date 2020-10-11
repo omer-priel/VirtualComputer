@@ -3,9 +3,173 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VirtualComputer", "VirtualComputer\VirtualComputer.vcxproj", "{CB1A91EA-CF18-476C-968E-15C8E72EB0C2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utils", "Utils\Utils.vcxproj", "{145ABB47-627C-40E3-A97E-2ED241E5C7A1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VirtualComputer", "VirtualComputer", "{EBAB2E07-FAFA-4564-9AF8-5740F1E8572A}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".git", ".git", "{CE4DF92E-9FA9-4E26-9336-F2FFD942144D}"
+	ProjectSection(SolutionItems) = preProject
+		.git\COMMIT_EDITMSG = .git\COMMIT_EDITMSG
+		.git\config = .git\config
+		.git\description = .git\description
+		.git\HEAD = .git\HEAD
+		.git\index = .git\index
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hooks", "hooks", "{DBFCC7F5-0DA2-4457-AD31-9236E501EE6A}"
+	ProjectSection(SolutionItems) = preProject
+		.git\hooks\applypatch-msg.sample = .git\hooks\applypatch-msg.sample
+		.git\hooks\commit-msg.sample = .git\hooks\commit-msg.sample
+		.git\hooks\fsmonitor-watchman.sample = .git\hooks\fsmonitor-watchman.sample
+		.git\hooks\post-update.sample = .git\hooks\post-update.sample
+		.git\hooks\pre-applypatch.sample = .git\hooks\pre-applypatch.sample
+		.git\hooks\pre-commit.sample = .git\hooks\pre-commit.sample
+		.git\hooks\pre-merge-commit.sample = .git\hooks\pre-merge-commit.sample
+		.git\hooks\pre-push.sample = .git\hooks\pre-push.sample
+		.git\hooks\pre-rebase.sample = .git\hooks\pre-rebase.sample
+		.git\hooks\pre-receive.sample = .git\hooks\pre-receive.sample
+		.git\hooks\prepare-commit-msg.sample = .git\hooks\prepare-commit-msg.sample
+		.git\hooks\update.sample = .git\hooks\update.sample
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "info", "info", "{B7A5179B-D5C7-4418-804D-9D0799952B85}"
+	ProjectSection(SolutionItems) = preProject
+		.git\info\exclude = .git\info\exclude
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "logs", "logs", "{AD639422-9083-42F9-A494-B6C95190D8D6}"
+	ProjectSection(SolutionItems) = preProject
+		.git\logs\HEAD = .git\logs\HEAD
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "refs", "refs", "{EBD30896-8090-47A3-BA5F-6E46BD295D8A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "heads", "heads", "{8CEED10C-A6A3-440F-A66A-7A5F8A9D03CF}"
+	ProjectSection(SolutionItems) = preProject
+		.git\logs\refs\heads\master = .git\logs\refs\heads\master
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "remotes", "remotes", "{EEE2D1AD-0B20-42C6-824D-88053066714E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "origin", "origin", "{63BA81DF-AEE6-4CF1-8DA6-A1C5B980B050}"
+	ProjectSection(SolutionItems) = preProject
+		.git\logs\refs\remotes\origin\master = .git\logs\refs\remotes\origin\master
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "objects", "objects", "{49FFAC79-35C2-4C4A-874A-B0A58D42EDCB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4a", "4a", "{DA5BC5F1-0A01-48C7-A5DE-17426156FCE1}"
+	ProjectSection(SolutionItems) = preProject
+		.git\objects\4a\faf2accdb0865aa17f6ed569bce10863b1ddfc = .git\objects\4a\faf2accdb0865aa17f6ed569bce10863b1ddfc
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "61", "61", "{BA6FD43C-9B29-4AFE-894C-CEBE8FC93E5A}"
+	ProjectSection(SolutionItems) = preProject
+		.git\objects\61\afa1a16885700594c25a2989da1f89e6bffa13 = .git\objects\61\afa1a16885700594c25a2989da1f89e6bffa13
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "78", "78", "{89B9DF90-68CB-4100-A842-846701227DB1}"
+	ProjectSection(SolutionItems) = preProject
+		.git\objects\78\b519101df44b71e1dd168ed005d09558d169a5 = .git\objects\78\b519101df44b71e1dd168ed005d09558d169a5
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "a6", "a6", "{B4B0C3BD-BC31-4B4B-B89B-57F50E77C816}"
+	ProjectSection(SolutionItems) = preProject
+		.git\objects\a6\7ad0f570bb2551158bb3928d0f616700911250 = .git\objects\a6\7ad0f570bb2551158bb3928d0f616700911250
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "b2", "b2", "{39133D41-2E46-4CED-AF1A-D6AB938ABF02}"
+	ProjectSection(SolutionItems) = preProject
+		.git\objects\b2\28a44893dfe0731c48040b36c56f2501266c11 = .git\objects\b2\28a44893dfe0731c48040b36c56f2501266c11
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "info", "info", "{620DE848-0312-45B8-BEA4-C116424FAAFA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pack", "pack", "{4143BAAD-55AB-4866-B773-DFCC4C7D6931}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "refs", "refs", "{3736876B-0FE7-4911-8DA4-622B5A372F06}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "heads", "heads", "{E53C415D-D9D3-4FBA-8020-E469FAB4ED14}"
+	ProjectSection(SolutionItems) = preProject
+		.git\refs\heads\master = .git\refs\heads\master
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "remotes", "remotes", "{BCE69B3B-6E29-448E-9AAB-18453D9ED932}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "origin", "origin", "{D176D48A-2CC1-40A5-B544-5CDB6F6C53B5}"
+	ProjectSection(SolutionItems) = preProject
+		.git\refs\remotes\origin\master = .git\refs\remotes\origin\master
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tags", "tags", "{23BC9756-85B0-4241-BDEB-9014600A460C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".vs", ".vs", "{F515DE64-FBB6-4E41-AF1F-D4FA3046DC77}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VirtualComputer", "VirtualComputer", "{E5401017-4305-4016-8BAE-F6B5557FE506}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "v16", "v16", "{30FFBA50-C309-44FE-9CC2-6BDB11103BA6}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CB1A91EA-CF18-476C-968E-15C8E72EB0C2}.Debug|x64.ActiveCfg = Debug|x64
+		{CB1A91EA-CF18-476C-968E-15C8E72EB0C2}.Debug|x64.Build.0 = Debug|x64
+		{CB1A91EA-CF18-476C-968E-15C8E72EB0C2}.Debug|x86.ActiveCfg = Debug|Win32
+		{CB1A91EA-CF18-476C-968E-15C8E72EB0C2}.Debug|x86.Build.0 = Debug|Win32
+		{CB1A91EA-CF18-476C-968E-15C8E72EB0C2}.Release|x64.ActiveCfg = Release|x64
+		{CB1A91EA-CF18-476C-968E-15C8E72EB0C2}.Release|x64.Build.0 = Release|x64
+		{CB1A91EA-CF18-476C-968E-15C8E72EB0C2}.Release|x86.ActiveCfg = Release|Win32
+		{CB1A91EA-CF18-476C-968E-15C8E72EB0C2}.Release|x86.Build.0 = Release|Win32
+		{145ABB47-627C-40E3-A97E-2ED241E5C7A1}.Debug|x64.ActiveCfg = Debug|x64
+		{145ABB47-627C-40E3-A97E-2ED241E5C7A1}.Debug|x64.Build.0 = Debug|x64
+		{145ABB47-627C-40E3-A97E-2ED241E5C7A1}.Debug|x86.ActiveCfg = Debug|Win32
+		{145ABB47-627C-40E3-A97E-2ED241E5C7A1}.Debug|x86.Build.0 = Debug|Win32
+		{145ABB47-627C-40E3-A97E-2ED241E5C7A1}.Release|x64.ActiveCfg = Release|x64
+		{145ABB47-627C-40E3-A97E-2ED241E5C7A1}.Release|x64.Build.0 = Release|x64
+		{145ABB47-627C-40E3-A97E-2ED241E5C7A1}.Release|x86.ActiveCfg = Release|Win32
+		{145ABB47-627C-40E3-A97E-2ED241E5C7A1}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CB1A91EA-CF18-476C-968E-15C8E72EB0C2} = {EBAB2E07-FAFA-4564-9AF8-5740F1E8572A}
+		{145ABB47-627C-40E3-A97E-2ED241E5C7A1} = {EBAB2E07-FAFA-4564-9AF8-5740F1E8572A}
+		{CE4DF92E-9FA9-4E26-9336-F2FFD942144D} = {EBAB2E07-FAFA-4564-9AF8-5740F1E8572A}
+		{DBFCC7F5-0DA2-4457-AD31-9236E501EE6A} = {CE4DF92E-9FA9-4E26-9336-F2FFD942144D}
+		{B7A5179B-D5C7-4418-804D-9D0799952B85} = {CE4DF92E-9FA9-4E26-9336-F2FFD942144D}
+		{AD639422-9083-42F9-A494-B6C95190D8D6} = {CE4DF92E-9FA9-4E26-9336-F2FFD942144D}
+		{EBD30896-8090-47A3-BA5F-6E46BD295D8A} = {AD639422-9083-42F9-A494-B6C95190D8D6}
+		{8CEED10C-A6A3-440F-A66A-7A5F8A9D03CF} = {EBD30896-8090-47A3-BA5F-6E46BD295D8A}
+		{EEE2D1AD-0B20-42C6-824D-88053066714E} = {EBD30896-8090-47A3-BA5F-6E46BD295D8A}
+		{63BA81DF-AEE6-4CF1-8DA6-A1C5B980B050} = {EEE2D1AD-0B20-42C6-824D-88053066714E}
+		{49FFAC79-35C2-4C4A-874A-B0A58D42EDCB} = {CE4DF92E-9FA9-4E26-9336-F2FFD942144D}
+		{DA5BC5F1-0A01-48C7-A5DE-17426156FCE1} = {49FFAC79-35C2-4C4A-874A-B0A58D42EDCB}
+		{BA6FD43C-9B29-4AFE-894C-CEBE8FC93E5A} = {49FFAC79-35C2-4C4A-874A-B0A58D42EDCB}
+		{89B9DF90-68CB-4100-A842-846701227DB1} = {49FFAC79-35C2-4C4A-874A-B0A58D42EDCB}
+		{B4B0C3BD-BC31-4B4B-B89B-57F50E77C816} = {49FFAC79-35C2-4C4A-874A-B0A58D42EDCB}
+		{39133D41-2E46-4CED-AF1A-D6AB938ABF02} = {49FFAC79-35C2-4C4A-874A-B0A58D42EDCB}
+		{620DE848-0312-45B8-BEA4-C116424FAAFA} = {49FFAC79-35C2-4C4A-874A-B0A58D42EDCB}
+		{4143BAAD-55AB-4866-B773-DFCC4C7D6931} = {49FFAC79-35C2-4C4A-874A-B0A58D42EDCB}
+		{3736876B-0FE7-4911-8DA4-622B5A372F06} = {CE4DF92E-9FA9-4E26-9336-F2FFD942144D}
+		{E53C415D-D9D3-4FBA-8020-E469FAB4ED14} = {3736876B-0FE7-4911-8DA4-622B5A372F06}
+		{BCE69B3B-6E29-448E-9AAB-18453D9ED932} = {3736876B-0FE7-4911-8DA4-622B5A372F06}
+		{D176D48A-2CC1-40A5-B544-5CDB6F6C53B5} = {BCE69B3B-6E29-448E-9AAB-18453D9ED932}
+		{23BC9756-85B0-4241-BDEB-9014600A460C} = {3736876B-0FE7-4911-8DA4-622B5A372F06}
+		{F515DE64-FBB6-4E41-AF1F-D4FA3046DC77} = {EBAB2E07-FAFA-4564-9AF8-5740F1E8572A}
+		{E5401017-4305-4016-8BAE-F6B5557FE506} = {F515DE64-FBB6-4E41-AF1F-D4FA3046DC77}
+		{30FFBA50-C309-44FE-9CC2-6BDB11103BA6} = {E5401017-4305-4016-8BAE-F6B5557FE506}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {27063296-A28A-437F-BE45-266E9B07C7C9}
