@@ -19,8 +19,6 @@ namespace Utils
 
 		// Static
 	public:
-		static constexpr size_t MAX_FILE_SIZE = (1024 * 1024 * 1024 * 4) - 1;
-
 		static bool Exists(const char* path);
 
 		static inline bool Exists(const std::string& path);

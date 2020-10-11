@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "Utils/Directory.h"
+#include "Drive.h"
 
 // Drive = file
 // Path = Drive:/DirectoryNames.../FileName
@@ -11,6 +11,7 @@
         Entity = Directory or File.
         Chank = Area of bytes on the drive.
     Settings:
+        MAX_DRIVES 26
         MAX_DIRECTORIES_AND_FILES = 255
         MAX_ENTITY_NAME = 20
         POINTER sizeof(unsigned int)
@@ -19,8 +20,8 @@
     Drive:
         Directory
             DirectoryName [MAX_ENTITY_NAME]
-            EntitiesCount
-            EntityPointers [MAX_DIRECTORIES_AND_FILES]
+            EntitiesCount MAX_DIRECTORIES_AND_FILES
+            EntityPointers POINTER[MAX_DIRECTORIES_AND_FILES]
         File
             FileName [MAX_ENTITY_NAME]
             FileSize MAX_FILE_SIZE
@@ -39,15 +40,24 @@ int main()
 {
     Utils::Debug::DebugTrace::BeginSession();
 
-    bool isCreatedNow;
-    Utils::Directory::Exists("drives", true, isCreatedNow);
-    if (isCreatedNow)
+    // Load Drives
+    bool haveError = false;
+    Drive::LoadDrives(haveError);
+    
+    if (haveError)
     {
-        std::cout << "Is created now!\n";
+        std::cin.get();
+        return 1;
     }
-    else
+
+    // Start Runing
+    // TODO Delete this loop
+    for (Drive* drive : Drive::s_Drives)
     {
-        std::cout << "Exists\n";
+        if (drive != nullptr)
+        {
+            std::cout << drive->m_DrivePath << " - " << drive->m_DriveName << ": " << drive->m_FileStream.Size() << " bytes.\n";
+        }
     }
 
     std::cout << "Press any key to continue . . .";
