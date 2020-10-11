@@ -6,11 +6,13 @@
     <ClCompile Include="src\Utils\Debug\DebugTimer.cpp" />
     <ClCompile Include="src\Utils\Debug\Logger.cpp" />
     <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\Utils\Directory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\File.h" />
     <ClInclude Include="src\Utils\Debug\DebugTimer.h" />
     <ClInclude Include="src\Utils\Debug\Logger.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\Utils\Directory.h" />
   </ItemGroup>
 </Project>
