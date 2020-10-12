@@ -2,11 +2,12 @@
 
 // Settings
 #define MAX_DRIVES 26
-#define MAX_DIRECTORIES_AND_FILES 255
+#define MAX_DIRECTORIES 255
+#define MAX_FILES 255
 #define MAX_ENTITY_NAME 20
 #define POINTER 0xffffffff // MAX_VALUE of "unsigned int"
 #define MAX_FILE_SIZE 0xffffffff // MAX_VALUE of "unsigned int"
-#define CHANK_SIZE (MAX_ENTITY_NAME + 1 + (MAX_DIRECTORIES_AND_FILES * 4))
+#define CHANK_SIZE (MAX_ENTITY_NAME + 2 + ((MAX_DIRECTORIES + MAX_FILES) * 4))
 
 // Librarys
 #include <iostream>

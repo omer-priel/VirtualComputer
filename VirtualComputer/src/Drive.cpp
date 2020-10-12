@@ -78,11 +78,8 @@ Drive* Drive::CreateDrive()
     drivePath += DIVER_EXTENSION;
 
     Utils::File fileStream(drivePath, true);
-    
-    fileStream.Write<char>(0); // EntitiesCount
-    
-    // EntityPointers
-    std::array<char, MAX_DIRECTORIES_AND_FILES * 4> arr;
+        
+    std::array<char, (CHANK_SIZE - MAX_ENTITY_NAME) + (MAX_FILES + 4)> arr; // CHANK_SIZE - MAX_ENTITY_NAME = Drive, MAX_FILES + DeletedMemoryList
     arr.fill(0);
     fileStream.Write(&arr[0], arr.size());
     fileStream.Close();

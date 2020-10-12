@@ -12,7 +12,8 @@
         Chank = Area of bytes on the drive.
     Settings:
         MAX_DRIVES 26
-        MAX_DIRECTORIES_AND_FILES = 255
+        MAX_DIRECTORIES = 255
+        MAX_FILES = 255
         MAX_ENTITY_NAME = 20
         POINTER sizeof(unsigned int)
         MAX_FILE_SIZE sizeof(unsigned int)
@@ -20,8 +21,11 @@
     Drive:
         Directory
             DirectoryName [MAX_ENTITY_NAME]
-            EntitiesCount MAX_DIRECTORIES_AND_FILES
-            EntityPointers POINTER[MAX_DIRECTORIES_AND_FILES]
+            DirectoriesCount MAX_DIRECTORIES
+            DirectoryPointers POINTER[MAX_DIRECTORIES]
+            FilesCount MAX_FILES
+            FilePointers [MAX_FILES]
+
         File
             FileName [MAX_ENTITY_NAME]
             FileSize MAX_FILE_SIZE
@@ -29,11 +33,14 @@
             FileBody
                 do
                     BodyChank [CHANK_SIZE - 4]
-                    if (FileSize <= CHANK_SIZE - 4)
+                    if (File <= CHANK_SIZE - 4)
                         4 bytes of 0
                     else
                         PointerToNextChank
                 while (FileSize <= CHANK_SIZE - 4);
+        DeletedMemoryList
+            EntityPointers [MAX_FILES]
+            NextEmptyMemoryList PointerToNextChank
 */
 
 int main()
