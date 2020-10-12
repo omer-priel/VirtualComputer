@@ -47,39 +47,6 @@
             NextDeletedMemoryList ChankLocation
 */
 
-static std::array<char, CHANK_SIZE> arr;
-static Drive* drive;
-static unsigned int index;
-
-void Create()
-{
-    index = drive->GenerateChank();
-    drive->m_FileStream.Write(Drive::ChankToFileIndex(index), &arr[0], arr.size());
-}
-
-void Delete(unsigned int chankIndex)
-{
-    drive->DeleteChank(2 + chankIndex);
-}
-
-void Test()
-{
-    arr.fill(0);
-    drive = Drive::s_DriveCurrent;
-
-    std::cout << "Test\n";
-
-    for (size_t i = 0; i < 3000; i++)
-    {
-        Create();
-    }
-
-    for (size_t i = 0; i < 1500; i++)
-    {
-        Delete(1000 - i);
-    }
-}
-
 int main()
 {
     Utils::Debug::DebugTrace::BeginSession();
@@ -96,8 +63,6 @@ int main()
 
     // Start Runing
     // TODO Delete this loop
-    Test();
-
     for (Drive* drive : Drive::s_Drives)
     {
         if (drive != nullptr)
