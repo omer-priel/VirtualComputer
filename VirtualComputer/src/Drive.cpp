@@ -79,7 +79,7 @@ Drive* Drive::CreateDrive()
 
     Utils::File fileStream(drivePath, true);
         
-    std::array<char, (CHANK_SIZE - MAX_ENTITY_NAME) + (MAX_FILES + 4)> arr; // CHANK_SIZE - MAX_ENTITY_NAME = Drive, MAX_FILES + DeletedMemoryList
+    std::array<char, (CHANK_SIZE - MAX_ENTITY_NAME) + CHANK_SIZE> arr; // CHANK_SIZE - MAX_ENTITY_NAME = Drive, CHANK_SIZE = DeletedMemoryList
     arr.fill(0);
     fileStream.Write(&arr[0], arr.size());
     fileStream.Close();
@@ -92,4 +92,12 @@ Drive* Drive::CreateDrive()
     s_DrivesActives++;
 
     return drive;
+}
+
+size_t Drive::ChankToFileIndex(const unsigned int& chankIndex)
+{
+    if (chankIndex == 0)
+        return 0;
+
+    return (CHANK_SIZE * chankIndex) - MAX_ENTITY_NAME;
 }

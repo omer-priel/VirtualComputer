@@ -10,6 +10,7 @@
         Drive, Directory, File, Path
         Entity = Directory or File.
         Chank = Area of bytes on the drive.
+        Location = ChankId
     Settings:
         MAX_DRIVES 26
         MAX_DIRECTORIES = 255
