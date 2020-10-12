@@ -2,6 +2,8 @@
 
 #include "Utils/File.h"
 
+#include "DirectoryBody.h"
+
 class Drive
 {
 	// Static
@@ -22,10 +24,13 @@ public:
 	char m_DriveName;
 
 public:
+	DirectoryBody m_Body;
+
+public:
 	Drive(const std::string& drivePath, char driveName)
 		: m_DrivePath(drivePath), m_FileStream(drivePath), m_DriveName(driveName)
 	{
-
+		m_Body.LoadBody(m_FileStream);
 	}
 };
 

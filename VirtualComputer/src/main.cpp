@@ -22,9 +22,9 @@
         Directory
             DirectoryName [MAX_ENTITY_NAME]
             DirectoriesCount MAX_DIRECTORIES
-            DirectoryPointers POINTER[MAX_DIRECTORIES]
+            DirectoriesLocations POINTER[MAX_DIRECTORIES]
             FilesCount MAX_FILES
-            FilePointers [MAX_FILES]
+            FilesLocations [MAX_FILES]
 
         File
             FileName [MAX_ENTITY_NAME]
@@ -39,7 +39,7 @@
                         PointerToNextChank
                 while (FileSize <= CHANK_SIZE - 4);
         DeletedMemoryList
-            EntityPointers [MAX_FILES]
+            ChanksPointers [MAX_FILES]
             NextEmptyMemoryList PointerToNextChank
 */
 

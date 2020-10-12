@@ -163,6 +163,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\MemoryEntity.cpp" />
+    <ClCompile Include="src\Directory.cpp" />
+    <ClCompile Include="src\DirectoryBody.cpp" />
     <ClCompile Include="src\Drive.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -173,6 +176,9 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Directory.h" />
+    <ClInclude Include="src\MemoryEntity.h" />
+    <ClInclude Include="src\DirectoryBody.h" />
     <ClInclude Include="src\Drive.h" />
     <ClInclude Include="src\pch.h" />
   </ItemGroup>

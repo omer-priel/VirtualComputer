@@ -4,9 +4,15 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\pch.cpp" />
     <ClCompile Include="src\Drive.cpp" />
+    <ClCompile Include="src\Directory.cpp" />
+    <ClCompile Include="src\DirectoryBody.cpp" />
+    <ClCompile Include="src\MemoryEntity.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Drive.h" />
+    <ClInclude Include="src\DirectoryBody.h" />
+    <ClInclude Include="src\MemoryEntity.h" />
+    <ClInclude Include="src\Directory.h" />
   </ItemGroup>
 </Project>

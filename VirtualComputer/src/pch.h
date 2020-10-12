@@ -21,4 +21,4 @@
 #include "Utils/Debug/DebugTimer.h"
 
 using Logger = Utils::Debug::Logger;
-using DebugTimer = Utils::Debug::DebugTimer;
+using DebugTimer = Utils::Debug::DebugTimer; 
