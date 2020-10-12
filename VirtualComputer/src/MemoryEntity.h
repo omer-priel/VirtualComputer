@@ -5,7 +5,7 @@
 class MemoryEntity
 {
 public:
-	unsigned int m_Location;
+	unsigned int m_ChankIndex;
 
 	bool m_NameLoaded = false;
 	char m_Name[MAX_ENTITY_NAME + 1];

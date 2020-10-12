@@ -94,7 +94,7 @@ Drive* Drive::CreateDrive()
     return drive;
 }
 
-size_t Drive::ChankToFileIndex(const unsigned int& chankIndex)
+constexpr size_t Drive::ChankToFileIndex(const unsigned int& chankIndex)
 {
     if (chankIndex == 0)
         return 0;
