@@ -19,14 +19,17 @@
         MAX_FILE_SIZE sizeof(unsigned int)
         CHANK_SIZE = Directory Size
     Drive:
-        Directory
+        Drive = CHANK_SIZE - MAX_ENTITY_NAME
+            like Directory without CHANK_SIZE
+
+        Directory = CHANK_SIZE
             DirectoryName [MAX_ENTITY_NAME]
             DirectoriesCount MAX_DIRECTORIES
             DirectoriesLocations POINTER[MAX_DIRECTORIES]
             FilesCount MAX_FILES
             FilesLocations [MAX_FILES]
 
-        File
+        File = CHANK_SIZE
             FileName [MAX_ENTITY_NAME]
             FileSize MAX_FILE_SIZE
             FileBody [CHANK_SIZE - 4]
@@ -38,7 +41,7 @@
                     else
                         PointerToNextChank
                 while (FileSize <= CHANK_SIZE - 4);
-        DeletedMemoryList
+        DeletedMemoryList = CHANK_SIZE
             ChanksPointers [CHANK_SIZE - 4]
             NextDeletedMemoryList ChankLocation
 */
