@@ -7,6 +7,7 @@
     <ClCompile Include="src\Directory.cpp" />
     <ClCompile Include="src\DirectoryBody.cpp" />
     <ClCompile Include="src\MemoryEntity.cpp" />
+    <ClCompile Include="src\EntityName.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h" />
@@ -14,5 +15,6 @@
     <ClInclude Include="src\DirectoryBody.h" />
     <ClInclude Include="src\MemoryEntity.h" />
     <ClInclude Include="src\Directory.h" />
+    <ClInclude Include="src\EntityName.h" />
   </ItemGroup>
 </Project>

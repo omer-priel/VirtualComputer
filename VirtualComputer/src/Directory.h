@@ -1,21 +1,19 @@
 #pragma once
 
-#include "MemoryEntity.h"
 #include "DirectoryBody.h"
+#include "EntityName.h"
 
-class Directory : public MemoryEntity
+class Directory : public DirectoryBody
 {
 	// None-Static
 private:
-	char m_Name[MAX_ENTITY_NAME + 1];
-
 public:
-	DirectoryBody m_Body;
+	EntityName m_Name;
 
 public:
 	Directory()
 	{
-		m_Name[MAX_ENTITY_NAME] = 0; // last byte for print
+
 	}
 };
 

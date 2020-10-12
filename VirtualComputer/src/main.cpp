@@ -39,8 +39,8 @@
                         PointerToNextChank
                 while (FileSize <= CHANK_SIZE - 4);
         DeletedMemoryList
-            ChanksPointers [MAX_FILES]
-            NextEmptyMemoryList PointerToNextChank
+            ChanksPointers [CHANK_SIZE - 4]
+            NextDeletedMemoryList ChankLocation
 */
 
 int main()

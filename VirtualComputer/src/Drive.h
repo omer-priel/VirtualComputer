@@ -4,7 +4,7 @@
 
 #include "DirectoryBody.h"
 
-class Drive
+class Drive : public DirectoryBody
 {
 	// Static
 public:
@@ -24,13 +24,11 @@ public:
 	char m_DriveName;
 
 public:
-	DirectoryBody m_Body;
-
-public:
 	Drive(const std::string& drivePath, char driveName)
 		: m_DrivePath(drivePath), m_FileStream(drivePath), m_DriveName(driveName)
 	{
-		m_Body.LoadBody(m_FileStream);
+		m_Location = 0;
+		LoadDirectoryBody(m_FileStream);
 	}
 };
 

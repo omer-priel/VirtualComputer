@@ -1,5 +1,8 @@
 #pragma once
-class DirectoryBody
+
+#include "MemoryEntity.h"
+
+class DirectoryBody : public MemoryEntity
 {
 public:
 	unsigned char m_DirectoriesCount = 0;
@@ -7,6 +10,8 @@ public:
 	unsigned char m_FilesCount = 0;
 	unsigned int m_FilesLocations[MAX_DIRECTORIES];
 
-	void LoadBody(Utils::File& fileStream);
+	bool m_DirectoryBodyLoaded = false;
+
+	void LoadDirectoryBody(Utils::File& fileStream);
 };
 

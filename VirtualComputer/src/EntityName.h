@@ -2,15 +2,13 @@
 
 #include "Utils/File.h"
 
-class MemoryEntity
+class EntityName
 {
 public:
-	unsigned int m_Location;
-
 	bool m_NameLoaded = false;
 	char m_Name[MAX_ENTITY_NAME + 1];
 
-	MemoryEntity()
+	EntityName()
 	{
 		m_Name[MAX_ENTITY_NAME] = 0; // last byte for print
 	}
@@ -18,4 +16,3 @@ public:
 	void LoadName(Utils::File& fileStream);
 	char* GetName(Utils::File& fileStream);
 };
-

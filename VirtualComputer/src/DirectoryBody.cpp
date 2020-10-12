@@ -3,11 +3,16 @@
 
 #include "Utils/File.h"
 
-void DirectoryBody::LoadBody(Utils::File& fileStream)
+void DirectoryBody::LoadDirectoryBody(Utils::File& fileStream)
 {
-	m_DirectoriesCount = fileStream.Read<unsigned char>();
-	fileStream.Read(m_DirectoriesLocations);
+	if (!m_DirectoryBodyLoaded)
+	{
+		m_DirectoriesCount = fileStream.Read<unsigned char>();
+		fileStream.Read(m_DirectoriesLocations);
 
-	m_FilesCount = fileStream.Read<unsigned char>();
-	fileStream.Read(m_FilesLocations);
+		m_FilesCount = fileStream.Read<unsigned char>();
+		fileStream.Read(m_FilesLocations);
+
+		m_DirectoryBodyLoaded = true;
+	}
 }

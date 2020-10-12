@@ -45,7 +45,7 @@ void Drive::LoadDrives(bool& haveError)
 
             drivePath = DIVERS_PATH;
             drivePath += "//drive";
-            int driveId = s_DrivesActives + 1;
+            unsigned int driveId = s_DrivesActives + 1;
             if (driveId >= 10)
             {
                 drivePath += (char)('0' + (driveId / 10));
@@ -69,7 +69,7 @@ Drive* Drive::CreateDrive()
     }
     std::string drivePath = DIVERS_PATH;
     drivePath += "//drive";
-    int driveId = s_DrivesActives + 1;
+    unsigned int driveId = s_DrivesActives + 1;
     if (driveId >= 10)
     {
         drivePath += (char)('0' + (driveId / 10));
