@@ -85,7 +85,7 @@ public:
 
 	void LoadBody();
 
-	void CreateDirectory(const char name[MAX_ENTITY_NAME + 1]);
+	unsigned int CreateDirectory(const char name[MAX_ENTITY_NAME + 1]);
 
 	void DeleteDirectory(unsigned char directoryIndex);
 	void DeleteDirectory(const char name[MAX_ENTITY_NAME + 1]);

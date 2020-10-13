@@ -2,7 +2,7 @@
 
 #include "Utils/File.h"
 
-class EntityName
+class SmartEntityName
 {
 	//Static
 public:
@@ -10,11 +10,12 @@ public:
 
 	//None-Static
 public:
-	bool m_NameLoaded = false;
+	bool m_NameLoaded;
 	char m_Name[MAX_ENTITY_NAME + 1];
 
-	EntityName()
+	SmartEntityName()
 	{
+		m_NameLoaded = false;
 		m_Name[MAX_ENTITY_NAME] = 0; // last byte for print
 	}
 

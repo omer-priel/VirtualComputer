@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Drive.h"
+#include "Directory.h"
 
 // Drive = file
 // Path = Drive:/DirectoryNames.../FileName
@@ -47,43 +48,74 @@
             NextDeletedMemoryList ChankLocation
 */
 
-void PrintDrive(Drive* drive)
+void PrintDirectoryBody(DirectoryBody* directoryBody)
 {
-    std::cout << drive->m_DriveName << ":\n";
-
     std::cout << "Directories:\n";
-    for (unsigned char i = 0; i < drive->m_DirectoriesCount; i++)
+    for (unsigned char i = 0; i < directoryBody->m_DirectoriesCount; i++)
     {
-        std::cout << drive->m_DirectoriesNames[i].m_Name << "\n";
+        std::cout << directoryBody->m_DirectoriesNames[i].m_Name << "\n";
     }
     std::cout << "\n";
 
     std::cout << "Files:\n";
-    for (unsigned char i = 0; i < drive->m_FilesCount; i++)
+    for (unsigned char i = 0; i < directoryBody->m_FilesCount; i++)
     {
-        std::cout << drive->m_FilesNames[i].m_Name << "\n";
+        std::cout << directoryBody->m_FilesNames[i].m_Name << "\n";
     }
     std::cout << "\n";
+}
+
+void PrintDrive(Drive* drive)
+{
+    std::cout << "Drive " << drive->m_DriveName << ":\n";
+    PrintDirectoryBody(drive);
+}
+
+void PrintDirectory(Directory* directory)
+{
+    std::cout << "Directory " << directory->m_Name.m_Name << ":\n";
+    PrintDirectoryBody(directory);
+}
+
+char* CreateName(const char* name)
+{
+    char* ret = new char[MAX_ENTITY_NAME + 1];
+    for (size_t i = 0; i < MAX_ENTITY_NAME; i++)
+    {
+        ret[i] = name[i];
+        if (name[i] == 0)
+            break;
+    }
+
+    ret[MAX_ENTITY_NAME] = 0;
+    return ret;
 }
 
 void Test()
 {
     Drive* drive = Drive::s_DriveCurrent;
+
+    auto index = drive->CreateDirectory(CreateName("A3"));
+    if (index == 0)
+        return;
+
+    Directory A(index, drive);
+
+    index = A.CreateDirectory(CreateName("B1"));
+    if (index == 0)
+        return;
+
+    Directory B1(index, drive);
+
+    index = A.CreateDirectory(CreateName("B2"));
+    if (index == 0)
+        return;
+
+    Directory B2(index, drive);
     
-    char name[MAX_ENTITY_NAME + 1];
-    name[MAX_ENTITY_NAME] = 0;
-    name[0] = 'N';
-    name[1] = 'e';
-    name[2] = 'w';
-    name[3] = ' ';
-    name[4] = 'F';
-    name[5] = 'o';
-    name[6] = 'l';
-    name[7] = 'd';
-    name[8] = 'e';
-    name[9] = 'r';
-    name[10] = 0;
-    drive->CreateDirectory(name);
+    PrintDirectory(&A);
+    PrintDirectory(&B1);
+    PrintDirectory(&B2);
 }
 
 int main()

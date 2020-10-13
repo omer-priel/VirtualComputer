@@ -4,6 +4,7 @@
 #include "Utils/Directory.h"
 
 #include "DirectoryBody.h"
+#include "Directory.h"
 
 static const char* DIVERS_PATH = "drvies";
 static const char* DIVER_EXTENSION = ".vhd";
@@ -191,6 +192,7 @@ void Drive::DeleteChank(unsigned int chankIndex)
 // Body Actions
 void Drive::LoadBody()
 {
+    // Laod Directories and Files
     m_DirectoriesCount = m_FileStream.Read<unsigned char>();
     m_FileStream.Read((char*)m_DirectoriesLocations, MAX_DIRECTORIES);
 
@@ -210,12 +212,12 @@ void Drive::LoadBody()
     }
 }
 
-void Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
+unsigned int Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
 {
     if (m_DirectoriesCount == MAX_DIRECTORIES)
     {
         Logger::Error("Can't create Directorie");
-        return;
+        return 0;
     }
 
     for (unsigned char i = 0; i < m_DirectoriesCount; i++)
@@ -223,7 +225,7 @@ void Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
         if (m_DirectoriesNames[i].IsEqual((char*)name))
         {
             Logger::Error("This Name already exist!");
-            return;
+            return 0;
         }
     }
 
@@ -243,18 +245,20 @@ void Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
     GoToChank(chankIndex);
 
     m_FileStream.Write(name, MAX_ENTITY_NAME);
-
     std::array<char, CHANK_SIZE - MAX_ENTITY_NAME> data;
     data.fill(0);
     m_FileStream.Write(&data[0], data.size());
+
+    return chankIndex;
 }
 
 void Drive::DeleteDirectory(unsigned char directoryIndex)
 {
+    // use Directory class
 
 }
 
 void Drive::DeleteDirectory(const char name[MAX_ENTITY_NAME + 1])
 {
-
+    // use Directory class
 }
