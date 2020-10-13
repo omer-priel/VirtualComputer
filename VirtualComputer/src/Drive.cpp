@@ -3,6 +3,8 @@
 
 #include "Utils/Directory.h"
 
+#include "DirectoryBody.h"
+
 static const char* DIVERS_PATH = "drvies";
 static const char* DIVER_EXTENSION = ".vhd";
 
@@ -79,9 +81,9 @@ Drive* Drive::CreateDrive()
 
     Utils::File fileStream(drivePath, true);
         
-    std::array<char, (CHANK_SIZE - MAX_ENTITY_NAME) + CHANK_SIZE> arr; // CHANK_SIZE - MAX_ENTITY_NAME = Drive, CHANK_SIZE = DeletedMemoryList
-    arr.fill(0);
-    fileStream.Write(&arr[0], arr.size());
+    std::array<char, (CHANK_SIZE - MAX_ENTITY_NAME) + CHANK_SIZE> data; // CHANK_SIZE - MAX_ENTITY_NAME = Drive, CHANK_SIZE = DeletedMemoryList
+    data.fill(0);
+    fileStream.Write(&data[0], data.size());
     fileStream.Close();
 
     char driveName = (char)('A' + s_DrivesActives);
@@ -103,7 +105,7 @@ constexpr size_t Drive::ChankToFileIndex(const unsigned int& chankIndex)
 }
 
 // None-Static
-void Drive::GoToChank(unsigned int chankIndex, size_t indexInTheChank = 0)
+void Drive::GoToChank(unsigned int chankIndex, size_t indexInTheChank)
 {
     m_FileStream.ChangeIndex(Drive::ChankToFileIndex(chankIndex) + indexInTheChank);
 }
@@ -184,4 +186,59 @@ void Drive::DeleteChank(unsigned int chankIndex)
         m_FileStream.Write(m_DeletedMemoryList.List);
         m_FileStream.Write(m_DeletedMemoryList.NextDeletedMemoryList);
     }
+}
+
+// Body Actions
+void Drive::LoadBody()
+{
+    m_DirectoriesCount = m_FileStream.Read<unsigned char>();
+    m_FileStream.Read((char*)m_DirectoriesLocations, MAX_DIRECTORIES);
+
+    m_FilesCount = m_FileStream.Read<unsigned char>();
+    m_FileStream.Read((char*)m_FilesLocations, MAX_FILES);
+}
+
+void Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
+{
+    unsigned char index = 0;
+    while (index < MAX_DIRECTORIES && m_DirectoriesLocations[index] != 0)
+    {
+        index++;
+    }
+
+    if (index == MAX_DIRECTORIES)
+    {
+        Logger::Error("Can't create Directorie");
+    }
+    else
+    {
+        unsigned int chankIndex = GenerateChank();
+
+        GoToChank(m_ChankIndex);
+
+        m_DirectoriesCount++;
+        m_FileStream.Write(m_DirectoriesCount);
+
+        m_DirectoriesLocations[index] = chankIndex;
+        m_FileStream += index * 4;
+        m_FileStream.Write(m_DirectoriesLocations[index]);
+
+        GoToChank(chankIndex);
+
+        m_FileStream.Write(name, MAX_ENTITY_NAME);
+
+        std::array<char, CHANK_SIZE - MAX_ENTITY_NAME> data;
+        data.fill(0);
+        m_FileStream.Write(&data[0], data.size());
+    }
+}
+
+void Drive::DeleteDirectory(unsigned char directoryIndex)
+{
+
+}
+
+void Drive::DeleteDirectory(const char name[MAX_ENTITY_NAME + 1])
+{
+
 }

@@ -32,13 +32,13 @@ public:
 	// None-Static
 private:
 	std::string m_DrivePath;
-	Utils::File m_FileStream;
 
 public:
+	Utils::File m_FileStream;
 	char m_DriveName;
 	unsigned int m_ChanksCount;
 
-//private:
+private:
 	std::vector<unsigned int> m_DeletedMemoryListChanks;
 	DeletedMemoryList m_DeletedMemoryList;
 
@@ -49,7 +49,7 @@ public:
 		m_ChankIndex = 0;
 		m_ChanksCount = (m_FileStream.Size() + MAX_ENTITY_NAME) / CHANK_SIZE;
 		
-		LoadDirectoryBody(m_FileStream);
+		LoadBody();
 
 		// load m_DeletedMemoryList
 		{
@@ -84,5 +84,12 @@ public:
 	unsigned int GenerateChank();
 
 	void DeleteChank(unsigned int chankIndex);
+
+	void LoadBody();
+
+	void CreateDirectory(const char name[MAX_ENTITY_NAME + 1]);
+
+	void DeleteDirectory(unsigned char directoryIndex);
+	void DeleteDirectory(const char name[MAX_ENTITY_NAME + 1]);
 };
 

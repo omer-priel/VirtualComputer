@@ -22,5 +22,7 @@
 #include "Utils/Debug/Logger.h"
 #include "Utils/Debug/DebugTimer.h"
 
+// using
 using Logger = Utils::Debug::Logger;
 using DebugTimer = Utils::Debug::DebugTimer; 
+using Chank = std::array<char, CHANK_SIZE>;

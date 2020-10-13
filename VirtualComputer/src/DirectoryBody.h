@@ -9,9 +9,5 @@ public:
 	unsigned int m_DirectoriesLocations[MAX_DIRECTORIES];
 	unsigned char m_FilesCount = 0;
 	unsigned int m_FilesLocations[MAX_DIRECTORIES];
-
-	bool m_DirectoryBodyLoaded = false;
-
-	void LoadDirectoryBody(Utils::File& fileStream);
 };
 

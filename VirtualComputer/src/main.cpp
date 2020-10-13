@@ -47,6 +47,26 @@
             NextDeletedMemoryList ChankLocation
 */
 
+void Test()
+{
+    Drive* drive = Drive::s_DriveCurrent;
+    
+    char name[MAX_ENTITY_NAME + 1];
+    name[MAX_ENTITY_NAME] = 0;
+    name[0] = 'N';
+    name[1] = 'e';
+    name[2] = 'w';
+    name[3] = ' ';
+    name[4] = 'F';
+    name[5] = 'o';
+    name[6] = 'l';
+    name[7] = 'd';
+    name[8] = 'e';
+    name[9] = 'r';
+    name[10] = 0;
+    drive->CreateDirectory(name);
+}
+
 int main()
 {
     Utils::Debug::DebugTrace::BeginSession();
@@ -62,7 +82,16 @@ int main()
     }
 
     // Start Runing
-    // TODO Delete this loop
+    for (Drive* drive : Drive::s_Drives)
+    {
+        if (drive != nullptr)
+        {
+            std::cout << drive->m_DriveName << ":\n";
+        }
+    }
+    
+    Test();
+
     for (Drive* drive : Drive::s_Drives)
     {
         if (drive != nullptr)
