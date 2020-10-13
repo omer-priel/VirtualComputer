@@ -2,10 +2,10 @@
 #include "SmartEntityName.h"
 
 //Static
-bool SmartEntityName::IsEqual(char nameA[MAX_ENTITY_NAME + 1], char nameB[MAX_ENTITY_NAME + 1])
+bool SmartEntityName::IsEqual(const EntityName& nameA, const EntityName& nameB)
 {
-	char* ptrA = &nameA[0];
-	char* ptrB = &nameB[0];
+	const char* ptrA = &nameA[0];
+	const char* ptrB = &nameB[0];
 	do
 	{
 		if (*ptrA != *ptrB)
@@ -23,8 +23,13 @@ bool SmartEntityName::IsEqual(char nameA[MAX_ENTITY_NAME + 1], char nameB[MAX_EN
 // None-Static
 void SmartEntityName::LoadName(Utils::File& fileStream)
 {
-	fileStream.Read(m_Name, MAX_ENTITY_NAME);
+	fileStream.Read(&m_Name[0], MAX_ENTITY_NAME);
 	m_NameLoaded = true;
+}
+
+char* SmartEntityName::GetName()
+{
+	return &m_Name[0];
 }
 
 char* SmartEntityName::GetName(Utils::File& fileStream)
@@ -34,7 +39,7 @@ char* SmartEntityName::GetName(Utils::File& fileStream)
 		LoadName(fileStream);
 	}
 
-	return m_Name;
+	return &m_Name[0];
 }
 
 void SmartEntityName::Clear()
@@ -43,7 +48,7 @@ void SmartEntityName::Clear()
 	m_Name[0] = 0;
 }
 
-void SmartEntityName::Change(char name[MAX_ENTITY_NAME + 1])
+void SmartEntityName::Change(const EntityName& name)
 {
 	m_NameLoaded = true;
 	
@@ -57,7 +62,7 @@ void SmartEntityName::Change(char name[MAX_ENTITY_NAME + 1])
 	}
 }
 
-bool SmartEntityName::IsEqual(char name[MAX_ENTITY_NAME + 1])
+bool SmartEntityName::IsEqual(const EntityName& name)
 {
 	return SmartEntityName::IsEqual(m_Name, name);
 }

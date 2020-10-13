@@ -212,7 +212,7 @@ void Drive::LoadBody()
     }
 }
 
-unsigned int Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
+unsigned int Drive::CreateDirectory(const EntityName& name)
 {
     if (m_DirectoriesCount == MAX_DIRECTORIES)
     {
@@ -222,7 +222,7 @@ unsigned int Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
 
     for (unsigned char i = 0; i < m_DirectoriesCount; i++)
     {
-        if (m_DirectoriesNames[i].IsEqual((char*)name))
+        if (m_DirectoriesNames[i].IsEqual(name))
         {
             Logger::Error("This Name already exist!");
             return 0;
@@ -238,13 +238,13 @@ unsigned int Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
     m_FileStream.Write(m_DirectoriesCount);
 
     m_DirectoriesLocations[index] = chankIndex;
-    m_DirectoriesNames[index].Change((char*)name);
+    m_DirectoriesNames[index].Change(name);
     m_FileStream += index * 4;
     m_FileStream.Write(m_DirectoriesLocations[index]);
 
     GoToChank(chankIndex);
 
-    m_FileStream.Write(name, MAX_ENTITY_NAME);
+    m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
     std::array<char, CHANK_SIZE - MAX_ENTITY_NAME> data;
     data.fill(0);
     m_FileStream.Write(&data[0], data.size());
@@ -258,7 +258,7 @@ void Drive::DeleteDirectory(unsigned char directoryIndex)
 
 }
 
-void Drive::DeleteDirectory(const char name[MAX_ENTITY_NAME + 1])
+void Drive::DeleteDirectory(const EntityName& name)
 {
     // use Directory class
 }

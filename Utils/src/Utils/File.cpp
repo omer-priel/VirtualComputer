@@ -243,13 +243,6 @@ namespace Utils
 		UpdateIndex();
 
 		m_Stream.write((char*)&value, 1);
-		if (value != 0)
-		{
-			size_t iReal = m_Index;
-			int iValue = value;
-			char iValueChar = value;
-			int abv = 5;
-		}
 
 		m_Index++;
 	}
@@ -264,18 +257,7 @@ namespace Utils
 
 		UpdateIndex();
 
-		for (size_t i = 0; i < size; i++)
-		{
-			m_Stream << value[i];
-			if (value[i] != 0)
-			{
-				size_t iReal = m_Index + i;
-				int iValue = value[i];
-				char iValueChar = value[i];
-				int abv = 5;
-			}
-		}
-		//m_Stream.write(value, size);
+		m_Stream.write(value, size);
 
 		m_Index += size;
 	}

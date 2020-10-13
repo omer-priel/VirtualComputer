@@ -53,14 +53,14 @@ void PrintDirectoryBody(DirectoryBody* directoryBody)
     std::cout << "Directories:\n";
     for (unsigned char i = 0; i < directoryBody->m_DirectoriesCount; i++)
     {
-        std::cout << directoryBody->m_DirectoriesNames[i].m_Name << "\n";
+        std::cout << directoryBody->m_DirectoriesNames[i].GetName() << "\n";
     }
     std::cout << "\n";
 
     std::cout << "Files:\n";
     for (unsigned char i = 0; i < directoryBody->m_FilesCount; i++)
     {
-        std::cout << directoryBody->m_FilesNames[i].m_Name << "\n";
+        std::cout << directoryBody->m_FilesNames[i].GetName() << "\n";
     }
     std::cout << "\n";
 }
@@ -73,13 +73,14 @@ void PrintDrive(Drive* drive)
 
 void PrintDirectory(Directory* directory)
 {
-    std::cout << "Directory " << directory->m_Name.m_Name << ":\n";
+    std::cout << "Directory " << directory->m_Name.GetName() << ":\n";
     PrintDirectoryBody(directory);
 }
 
-char* CreateName(const char* name)
+EntityName CreateName(const char* name)
 {
-    char* ret = new char[MAX_ENTITY_NAME + 1];
+    EntityName ret;
+    ret.fill(0);
     for (size_t i = 0; i < MAX_ENTITY_NAME; i++)
     {
         ret[i] = name[i];

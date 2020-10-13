@@ -6,12 +6,12 @@ class SmartEntityName
 {
 	//Static
 public:
-	static bool IsEqual(char nameA[MAX_ENTITY_NAME + 1], char nameB[MAX_ENTITY_NAME + 1]);
+	static bool IsEqual(const EntityName& nameA, const EntityName& nameB);
 
 	//None-Static
 public:
 	bool m_NameLoaded;
-	char m_Name[MAX_ENTITY_NAME + 1];
+	EntityName m_Name;
 
 	SmartEntityName()
 	{
@@ -20,10 +20,12 @@ public:
 	}
 
 	void LoadName(Utils::File& fileStream);
+	
+	char* GetName();
 	char* GetName(Utils::File& fileStream);
 	
 	void Clear();
-	void Change(char name[MAX_ENTITY_NAME + 1]);
+	void Change(const EntityName& name);
 
-	bool IsEqual(char name[MAX_ENTITY_NAME + 1]);
+	bool IsEqual(const EntityName& name);
 };
