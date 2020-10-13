@@ -30,8 +30,11 @@ public:
 
 	unsigned int CreateDirectory(const EntityName& name);
 
-	void DeleteMe();
+	void Delete();
 
-	void DeleteDirectory(unsigned char directoryIndex);
+	void DeleteDirectory(unsigned char directoryIndex, const bool& first = true);
 	void DeleteDirectory(const EntityName& name);
+
+	void DeleteFile(unsigned char directoryIndex, const bool& first = true);
+	void DeleteFile(const EntityName& name);
 };

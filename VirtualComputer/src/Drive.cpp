@@ -255,7 +255,30 @@ unsigned int Drive::CreateDirectory(const EntityName& name)
 void Drive::DeleteDirectory(unsigned char directoryIndex)
 {
     // use Directory class
+    unsigned int chankIndex = m_DirectoriesLocations[directoryIndex];
 
+    Directory directory(chankIndex, this);
+    directory.Delete();
+
+    DeleteChank(chankIndex);
+
+    m_DirectoriesCount--;
+
+    unsigned char lastIndex = m_DirectoriesCount;
+    if (directoryIndex != lastIndex)
+    {
+        m_DirectoriesLocations[directoryIndex] = m_DirectoriesLocations[lastIndex];
+        m_DirectoriesNames[directoryIndex] = m_DirectoriesNames[lastIndex];
+    }
+
+    m_DirectoriesLocations[lastIndex] = 0;
+    m_DirectoriesNames[lastIndex].Clear();
+
+    GoToChank(m_ChankIndex);
+    m_FileStream.Write(m_DirectoriesCount);
+
+    m_FileStream += lastIndex * 4;
+    m_FileStream.Write<unsigned int>(0);
 }
 
 void Drive::DeleteDirectory(const EntityName& name)

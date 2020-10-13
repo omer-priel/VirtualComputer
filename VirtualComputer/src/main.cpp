@@ -92,11 +92,11 @@ EntityName CreateName(const char* name)
     return ret;
 }
 
-void Test()
-{
-    Drive* drive = Drive::s_DriveCurrent;
+Drive* drive;
 
-    auto index = drive->CreateDirectory(CreateName("A3"));
+void Create()
+{
+    auto index = drive->CreateDirectory(CreateName("A"));
     if (index == 0)
         return;
 
@@ -117,6 +117,18 @@ void Test()
     PrintDirectory(&A);
     PrintDirectory(&B1);
     PrintDirectory(&B2);
+}
+
+void Delete()
+{
+    drive->DeleteDirectory(0);
+}
+
+void Test()
+{
+    drive = Drive::s_DriveCurrent;
+    Create();
+    //Delete();
 }
 
 int main()
