@@ -194,8 +194,44 @@ void Drive::LoadBody()
     m_DirectoriesCount = m_FileStream.Read<unsigned char>();
     m_FileStream.Read((char*)m_DirectoriesLocations, MAX_DIRECTORIES);
 
+    unsigned char index = 0;
+    unsigned int* locationPtr = m_DirectoriesLocations;
+    EntityName* namePtr = m_DirectoriesNames;
+    while (index < m_DirectoriesCount)
+    {
+        if (*locationPtr != 0)
+        {
+            GoToChank(*locationPtr);
+            namePtr->LoadName(m_FileStream);
+        }
+        else
+        {
+            namePtr->Clear();
+        }
+        locationPtr++;
+        namePtr++;
+    }
+
     m_FilesCount = m_FileStream.Read<unsigned char>();
     m_FileStream.Read((char*)m_FilesLocations, MAX_FILES);
+    
+    index = 0;
+    locationPtr = m_FilesLocations;
+    namePtr = m_FilesNames;
+    while (index < m_FilesCount)
+    {
+        if (*locationPtr != 0)
+        {
+            GoToChank(*locationPtr);
+            namePtr->LoadName(m_FileStream);
+        }
+        else
+        {
+            namePtr->Clear();
+        }
+        locationPtr++;
+        namePtr++;
+    }
 }
 
 void Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
@@ -203,6 +239,11 @@ void Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
     unsigned char index = 0;
     while (index < MAX_DIRECTORIES && m_DirectoriesLocations[index] != 0)
     {
+        if (m_DirectoriesNames[index].IsEqual((char*)name))
+        {
+            Logger::Error("This Name already exist!");
+            return;
+        }
         index++;
     }
 
@@ -220,6 +261,7 @@ void Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
         m_FileStream.Write(m_DirectoriesCount);
 
         m_DirectoriesLocations[index] = chankIndex;
+        m_DirectoriesNames[index].Change((char*)name);
         m_FileStream += index * 4;
         m_FileStream.Write(m_DirectoriesLocations[index]);
 

@@ -47,6 +47,23 @@
             NextDeletedMemoryList ChankLocation
 */
 
+void PrintDrive(Drive* drive)
+{
+    std::cout << drive->m_DriveName << ":\n";
+
+    std::cout << "Directories:\n";
+    for (unsigned char i = 0; i < drive->m_DirectoriesCount; i++)
+    {
+        std::cout << drive->m_DirectoriesNames[i].m_Name << "\n";
+    }
+
+    std::cout << "\nFiles:\n";
+    for (unsigned char i = 0; i < drive->m_FilesCount; i++)
+    {
+        std::cout << drive->m_FilesNames[i].m_Name << "\n";
+    }
+}
+
 void Test()
 {
     Drive* drive = Drive::s_DriveCurrent;
@@ -86,7 +103,7 @@ int main()
     {
         if (drive != nullptr)
         {
-            std::cout << drive->m_DriveName << ":\n";
+            PrintDrive(drive);
         }
     }
     
@@ -96,7 +113,7 @@ int main()
     {
         if (drive != nullptr)
         {
-            std::cout << drive->m_DriveName << ":\n";
+            PrintDrive(drive);
         }
     }
 

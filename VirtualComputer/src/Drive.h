@@ -48,34 +48,32 @@ public:
 	{
 		m_ChankIndex = 0;
 		m_ChanksCount = (m_FileStream.Size() + MAX_ENTITY_NAME) / CHANK_SIZE;
-		
+
 		LoadBody();
 
 		// load m_DeletedMemoryList
+		m_DeletedMemoryList.ChankIndex = 1;
+
+		do
 		{
-			m_DeletedMemoryList.ChankIndex = 1;
+			m_DeletedMemoryListChanks.push_back(m_DeletedMemoryList.ChankIndex);
 
-			do
+			size_t indexOf_NextDeletedMemoryList = Drive::ChankToFileIndex(m_DeletedMemoryList.ChankIndex) + sizeof(m_DeletedMemoryList.List);
+			m_FileStream.Read<unsigned int>(indexOf_NextDeletedMemoryList, m_DeletedMemoryList.NextDeletedMemoryList);
+
+			if (m_DeletedMemoryList.NextDeletedMemoryList != 0)
 			{
-				m_DeletedMemoryListChanks.push_back(m_DeletedMemoryList.ChankIndex);
-
-				size_t indexOf_NextDeletedMemoryList = Drive::ChankToFileIndex(m_DeletedMemoryList.ChankIndex) + sizeof(m_DeletedMemoryList.List);
-				m_FileStream.Read<unsigned int>(indexOf_NextDeletedMemoryList, m_DeletedMemoryList.NextDeletedMemoryList);
-
-				if (m_DeletedMemoryList.NextDeletedMemoryList != 0)
-				{
-					m_DeletedMemoryList.ChankIndex = m_DeletedMemoryList.NextDeletedMemoryList;
-				}
-			} while (m_DeletedMemoryList.NextDeletedMemoryList != 0);
-
-			m_FileStream.ChangeIndex(Drive::ChankToFileIndex(m_DeletedMemoryList.ChankIndex));
-			m_FileStream.Read(m_DeletedMemoryList.List);
-			
-			m_DeletedMemoryList.Index = 0;
-			while (m_DeletedMemoryList.List[m_DeletedMemoryList.Index] != 0)
-			{
-				m_DeletedMemoryList.Index++;
+				m_DeletedMemoryList.ChankIndex = m_DeletedMemoryList.NextDeletedMemoryList;
 			}
+		} while (m_DeletedMemoryList.NextDeletedMemoryList != 0);
+
+		m_FileStream.ChangeIndex(Drive::ChankToFileIndex(m_DeletedMemoryList.ChankIndex));
+		m_FileStream.Read(m_DeletedMemoryList.List);
+
+		m_DeletedMemoryList.Index = 0;
+		while (m_DeletedMemoryList.List[m_DeletedMemoryList.Index] != 0)
+		{
+			m_DeletedMemoryList.Index++;
 		}
 	}
 
