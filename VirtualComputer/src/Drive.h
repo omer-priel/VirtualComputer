@@ -30,7 +30,7 @@ public:
 	static constexpr size_t ChankToFileIndex(const unsigned int& chankIndex);
 
 	// None-Static
-//private:
+private:
 	std::string m_DrivePath;
 	Utils::File m_FileStream;
 
