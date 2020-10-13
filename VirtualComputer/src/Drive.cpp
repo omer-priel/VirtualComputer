@@ -194,85 +194,59 @@ void Drive::LoadBody()
     m_DirectoriesCount = m_FileStream.Read<unsigned char>();
     m_FileStream.Read((char*)m_DirectoriesLocations, MAX_DIRECTORIES);
 
-    unsigned char index = 0;
-    unsigned int* locationPtr = m_DirectoriesLocations;
-    EntityName* namePtr = m_DirectoriesNames;
-    while (index < m_DirectoriesCount)
+    for (unsigned char i = 0; i < m_DirectoriesCount; i++)
     {
-        if (*locationPtr != 0)
-        {
-            GoToChank(*locationPtr);
-            namePtr->LoadName(m_FileStream);
-        }
-        else
-        {
-            namePtr->Clear();
-        }
-        locationPtr++;
-        namePtr++;
+        GoToChank(m_DirectoriesLocations[i]);
+        m_DirectoriesNames[i].LoadName(m_FileStream);
     }
 
     m_FilesCount = m_FileStream.Read<unsigned char>();
     m_FileStream.Read((char*)m_FilesLocations, MAX_FILES);
     
-    index = 0;
-    locationPtr = m_FilesLocations;
-    namePtr = m_FilesNames;
-    while (index < m_FilesCount)
+    for (unsigned char i = 0; i < m_FilesCount; i++)
     {
-        if (*locationPtr != 0)
-        {
-            GoToChank(*locationPtr);
-            namePtr->LoadName(m_FileStream);
-        }
-        else
-        {
-            namePtr->Clear();
-        }
-        locationPtr++;
-        namePtr++;
+        GoToChank(m_FilesLocations[i]);
+        m_FilesNames[i].LoadName(m_FileStream);
     }
 }
 
 void Drive::CreateDirectory(const char name[MAX_ENTITY_NAME + 1])
 {
-    unsigned char index = 0;
-    while (index < MAX_DIRECTORIES && m_DirectoriesLocations[index] != 0)
+    if (m_DirectoriesCount == MAX_DIRECTORIES)
     {
-        if (m_DirectoriesNames[index].IsEqual((char*)name))
+        Logger::Error("Can't create Directorie");
+        return;
+    }
+
+    for (unsigned char i = 0; i < m_DirectoriesCount; i++)
+    {
+        if (m_DirectoriesNames[i].IsEqual((char*)name))
         {
             Logger::Error("This Name already exist!");
             return;
         }
-        index++;
     }
 
-    if (index == MAX_DIRECTORIES)
-    {
-        Logger::Error("Can't create Directorie");
-    }
-    else
-    {
-        unsigned int chankIndex = GenerateChank();
+    unsigned char index = m_DirectoriesCount;
+    unsigned int chankIndex = GenerateChank();
 
-        GoToChank(m_ChankIndex);
+    GoToChank(m_ChankIndex);
 
-        m_DirectoriesCount++;
-        m_FileStream.Write(m_DirectoriesCount);
+    m_DirectoriesCount++;
+    m_FileStream.Write(m_DirectoriesCount);
 
-        m_DirectoriesLocations[index] = chankIndex;
-        m_DirectoriesNames[index].Change((char*)name);
-        m_FileStream += index * 4;
-        m_FileStream.Write(m_DirectoriesLocations[index]);
+    m_DirectoriesLocations[index] = chankIndex;
+    m_DirectoriesNames[index].Change((char*)name);
+    m_FileStream += index * 4;
+    m_FileStream.Write(m_DirectoriesLocations[index]);
 
-        GoToChank(chankIndex);
+    GoToChank(chankIndex);
 
-        m_FileStream.Write(name, MAX_ENTITY_NAME);
+    m_FileStream.Write(name, MAX_ENTITY_NAME);
 
-        std::array<char, CHANK_SIZE - MAX_ENTITY_NAME> data;
-        data.fill(0);
-        m_FileStream.Write(&data[0], data.size());
-    }
+    std::array<char, CHANK_SIZE - MAX_ENTITY_NAME> data;
+    data.fill(0);
+    m_FileStream.Write(&data[0], data.size());
 }
 
 void Drive::DeleteDirectory(unsigned char directoryIndex)

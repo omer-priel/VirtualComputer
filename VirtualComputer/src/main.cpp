@@ -56,12 +56,14 @@ void PrintDrive(Drive* drive)
     {
         std::cout << drive->m_DirectoriesNames[i].m_Name << "\n";
     }
+    std::cout << "\n";
 
-    std::cout << "\nFiles:\n";
+    std::cout << "Files:\n";
     for (unsigned char i = 0; i < drive->m_FilesCount; i++)
     {
         std::cout << drive->m_FilesNames[i].m_Name << "\n";
     }
+    std::cout << "\n";
 }
 
 void Test()
