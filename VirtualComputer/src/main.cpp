@@ -127,8 +127,17 @@ void Delete()
 void Test()
 {
     drive = Drive::s_DriveCurrent;
-    Create();
-    //Delete();
+    
+    int code;
+    std::cin >> code;
+    if (code == 1)
+    {
+        Create();
+    }
+    else if (code == 2)
+    {
+        Delete();
+    }
 }
 
 int main()

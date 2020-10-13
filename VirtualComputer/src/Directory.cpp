@@ -4,6 +4,8 @@
 // None-Static
 void Directory::LoadBody()
 {
+    m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME);
+
     // Laod Directories and Files
     m_DirectoriesCount = m_Drive->m_FileStream.Read<unsigned char>();
     m_Drive->m_FileStream.Read((char*)m_DirectoriesLocations, MAX_DIRECTORIES);
@@ -14,6 +16,7 @@ void Directory::LoadBody()
         m_DirectoriesNames[i].LoadName(m_Drive->m_FileStream);
     }
 
+    m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + 1 + MAX_DIRECTORIES * 4);
     m_FilesCount = m_Drive->m_FileStream.Read<unsigned char>();
     m_Drive->m_FileStream.Read((char*)m_FilesLocations, MAX_FILES);
 
@@ -147,7 +150,7 @@ void Directory::DeleteFile(unsigned char fileIndex, const bool& first)
         m_FilesLocations[lastIndex] = 0;
         m_FilesNames[lastIndex].Clear();
 
-        m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + (4 + MAX_DIRECTORIES * 4));
+        m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + (1 + MAX_DIRECTORIES * 4));
         m_Drive->m_FileStream.Write(m_FilesCount);
 
         m_Drive->m_FileStream += lastIndex * 4;

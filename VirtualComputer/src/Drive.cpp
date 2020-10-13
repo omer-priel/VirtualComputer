@@ -7,7 +7,7 @@
 #include "Directory.h"
 
 static const char* DIVERS_PATH = "drvies";
-static const char* DIVER_EXTENSION = ".vhd";
+static const char* DIVER_EXTENSION = ".vhd.castum";
 
 // Static
 unsigned char Drive::s_DrivesActives = 0;
@@ -193,6 +193,7 @@ void Drive::DeleteChank(unsigned int chankIndex)
 void Drive::LoadBody()
 {
     // Laod Directories and Files
+    GoToChank(m_ChankIndex);
     m_DirectoriesCount = m_FileStream.Read<unsigned char>();
     m_FileStream.Read((char*)m_DirectoriesLocations, MAX_DIRECTORIES);
 
@@ -202,6 +203,7 @@ void Drive::LoadBody()
         m_DirectoriesNames[i].LoadName(m_FileStream);
     }
 
+    GoToChank(m_ChankIndex, 1 + MAX_DIRECTORIES * 4);
     m_FilesCount = m_FileStream.Read<unsigned char>();
     m_FileStream.Read((char*)m_FilesLocations, MAX_FILES);
     
@@ -263,7 +265,7 @@ void Drive::DeleteDirectory(unsigned char directoryIndex)
     DeleteChank(chankIndex);
 
     m_DirectoriesCount--;
-
+    
     unsigned char lastIndex = m_DirectoriesCount;
     if (directoryIndex != lastIndex)
     {
