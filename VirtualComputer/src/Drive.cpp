@@ -187,6 +187,8 @@ void Drive::DeleteChank(unsigned int chankIndex)
         m_FileStream.Write(m_DeletedMemoryList.List);
         m_FileStream.Write(m_DeletedMemoryList.NextDeletedMemoryList);
     }
+
+    Logger::Info("Chank ", chankIndex, " deleted.");
 }
 
 // Body Actions
@@ -233,6 +235,7 @@ unsigned int Drive::CreateDirectory(const EntityName& name)
 
     unsigned char index = m_DirectoriesCount;
     unsigned int chankIndex = GenerateChank();
+    Logger::Info("Drive ", m_DriveName, ": Generate Chank ", chankIndex, " for Directory \"", &name[0], "\"");
 
     GoToChank(m_ChankIndex);
 

@@ -46,6 +46,7 @@ unsigned int Directory::CreateDirectory(const EntityName& name)
 
     unsigned char index = m_DirectoriesCount;
     unsigned int chankIndex = m_Drive->GenerateChank();
+    Logger::Info("Directory \"", m_Name.GetName(), "\" Generate Chank ", chankIndex, " for Directory \"", &name[0], "\"");
 
     m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME);
 

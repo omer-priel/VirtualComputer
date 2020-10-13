@@ -94,36 +94,6 @@ EntityName CreateName(const char* name)
 
 Drive* drive;
 
-void Create()
-{
-    auto index = drive->CreateDirectory(CreateName("A"));
-    if (index == 0)
-        return;
-
-    Directory A(index, drive);
-
-    index = A.CreateDirectory(CreateName("B1"));
-    if (index == 0)
-        return;
-
-    Directory B1(index, drive);
-
-    index = A.CreateDirectory(CreateName("B2"));
-    if (index == 0)
-        return;
-
-    Directory B2(index, drive);
-    
-    PrintDirectory(&A);
-    PrintDirectory(&B1);
-    PrintDirectory(&B2);
-}
-
-void Delete()
-{
-    drive->DeleteDirectory(0);
-}
-
 void Test()
 {
     drive = Drive::s_DriveCurrent;
@@ -132,17 +102,19 @@ void Test()
     std::cin >> code;
     if (code == 1)
     {
-        Create();
+        drive->CreateDirectory(CreateName("New Folder"));
     }
     else if (code == 2)
     {
-        Delete();
+        drive->DeleteDirectory(0);
     }
 }
 
 int main()
 {
     Utils::Debug::DebugTrace::BeginSession();
+
+    Logger::ChangeLevel(Logger::Level::Info);
 
     // Load Drives
     bool haveError = false;
@@ -173,7 +145,6 @@ int main()
         }
     }
 
-    std::cout << "Press any key to continue . . .";
-    std::cin.get();
     Utils::Debug::DebugTrace::EndSession();
+    system("PAUSE");//std::cout << "Press any key to continue . . .";
 }
