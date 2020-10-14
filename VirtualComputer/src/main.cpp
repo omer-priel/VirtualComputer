@@ -113,8 +113,7 @@ void Test()
 int main()
 {
     Utils::Debug::DebugTrace::BeginSession();
-
-    Logger::ChangeLevel(Logger::Level::Info);
+    Logger::ChangeLevel(Logger::Level::Warning);
 
     // Load Drives
     bool haveError = false;

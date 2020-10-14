@@ -8,6 +8,7 @@
     <ClCompile Include="src\DirectoryBody.cpp" />
     <ClCompile Include="src\MemoryEntity.cpp" />
     <ClCompile Include="src\SmartEntityName.cpp" />
+    <ClCompile Include="src\File.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h" />
@@ -16,5 +17,6 @@
     <ClInclude Include="src\MemoryEntity.h" />
     <ClInclude Include="src\Directory.h" />
     <ClInclude Include="src\SmartEntityName.h" />
+    <ClInclude Include="src\File.h" />
   </ItemGroup>
 </Project>
