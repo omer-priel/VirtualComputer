@@ -5,6 +5,7 @@
 
 #include "DirectoryBody.h"
 #include "Directory.h"
+#include "File.h"
 
 static const char* DIVERS_PATH = "drvies";
 static const char* DIVER_EXTENSION = ".vhd.castum";
@@ -289,4 +290,36 @@ void Drive::DeleteDirectory(unsigned char directoryIndex)
 void Drive::DeleteDirectory(const EntityName& name)
 {
     // use Directory class
+}
+
+void Drive::DeleteFile(unsigned char fileIndex)
+{
+    unsigned int chankIndex = m_FilesLocations[fileIndex];
+
+    File::DeleteFileBody(this, chankIndex);
+
+    DeleteChank(chankIndex);
+
+    m_FilesCount--;
+
+    unsigned char lastIndex = m_FilesCount;
+    if (fileIndex != lastIndex)
+    {
+        m_FilesLocations[fileIndex] = m_FilesLocations[lastIndex];
+        m_FilesNames[fileIndex] = m_FilesNames[lastIndex];
+    }
+
+    m_FilesLocations[lastIndex] = 0;
+    m_FilesNames[lastIndex].Clear();
+
+    GoToChank(m_ChankIndex, 1 + MAX_DIRECTORIES * 4);
+    m_FileStream.Write(m_FilesCount);
+
+    m_FileStream += lastIndex * 4;
+    m_FileStream.Write<unsigned int>(0);
+}
+
+void Drive::DeleteFile(const EntityName& name)
+{
+
 }

@@ -1,12 +1,41 @@
 #include "pch.h"
 #include "File.h"
 
+// Static
+void File::DeleteFileBody(Drive* drive, unsigned int chankIndex)
+{
+    drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
+
+    unsigned int size = drive->m_FileStream.Read<unsigned char>();
+
+    if (size > FIRST_FILE_BODY_SIZE)
+    {
+        drive->m_FileStream += FIRST_FILE_BODY_SIZE;
+        chankIndex = drive->m_FileStream.Read<unsigned char>();
+        size -= FIRST_FILE_BODY_SIZE;
+
+        while (size > 0)
+        {
+            drive->GoToChank(chankIndex, CHANK_SIZE - 4);
+            drive->DeleteChank(chankIndex);
+            if (CHANK_SIZE - 4 > size)
+            {
+                break;
+            }
+            else
+            {
+                size -= CHANK_SIZE - 4;
+                chankIndex = drive->m_FileStream.Read<unsigned char>();
+            }
+        }
+    }
+}
+
 // None-Static
 void File::LoadBody()
 {
     m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME);
 
-    // Laod Directories and Files
     m_Size = m_Drive->m_FileStream.Read<unsigned char>();
 
     if (m_Size < FIRST_FILE_BODY_SIZE)
@@ -38,13 +67,5 @@ void File::LoadBody()
 
             m_BodyChanks.push_back(chank);
         }
-    }
-}
-
-void File::DeleteBody(Drive* drive)
-{
-    for (FileBodyChank* chank :m_BodyChanks)
-    {
-        drive->DeleteChank(chank->ChankIndex);
     }
 }

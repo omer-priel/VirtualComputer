@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Directory.h"
 
+#include "File.h"
+
 // None-Static
 void Directory::LoadBody()
 {
@@ -135,7 +137,8 @@ void Directory::DeleteFile(unsigned char fileIndex, const bool& first)
 {
     unsigned int chankIndex = m_FilesLocations[fileIndex];
 
-    // Need Code
+    File::DeleteFileBody(m_Drive, chankIndex);
+    
     m_Drive->DeleteChank(chankIndex);
 
     m_FilesCount--;

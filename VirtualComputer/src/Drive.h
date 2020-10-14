@@ -89,5 +89,8 @@ public:
 
 	void DeleteDirectory(unsigned char directoryIndex);
 	void DeleteDirectory(const EntityName& name);
+
+	void DeleteFile(unsigned char fileIndex);
+	void DeleteFile(const EntityName& name);
 };
 

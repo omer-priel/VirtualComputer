@@ -13,6 +13,10 @@ class File : public MemoryEntity
 		char Body[CHANK_SIZE - 4];
 	};
 
+	// Static
+public:
+	static void DeleteFileBody(Drive* drive, unsigned int chankIndex);
+
 	// None-Static
 private:
 	Drive* m_Drive;
@@ -37,6 +41,5 @@ public:
 	}
 
 	void LoadBody();
-	void DeleteBody(Drive* drive);
 };
 
