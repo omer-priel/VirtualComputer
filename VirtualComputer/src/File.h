@@ -37,5 +37,6 @@ public:
 	}
 
 	void LoadBody();
+	void DeleteBody(Drive* drive);
 };
 

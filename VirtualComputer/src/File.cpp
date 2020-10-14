@@ -40,3 +40,11 @@ void File::LoadBody()
         }
     }
 }
+
+void File::DeleteBody(Drive* drive)
+{
+    for (FileBodyChank* chank :m_BodyChanks)
+    {
+        drive->DeleteChank(chank->ChankIndex);
+    }
+}
