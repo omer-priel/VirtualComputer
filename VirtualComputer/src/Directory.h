@@ -35,6 +35,8 @@ public:
 	void DeleteDirectory(unsigned char directoryIndex, const bool& first = true);
 	void DeleteDirectory(const EntityName& name);
 
+	unsigned int CreateFile(const EntityName& name, unsigned int size);
+
 	void DeleteFile(unsigned char directoryIndex, const bool& first = true);
 	void DeleteFile(const EntityName& name);
 };

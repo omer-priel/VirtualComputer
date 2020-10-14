@@ -112,6 +112,7 @@ void Drive::GoToChank(unsigned int chankIndex, size_t indexInTheChank)
     m_FileStream.ChangeIndex(Drive::ChankToFileIndex(chankIndex) + indexInTheChank);
 }
 
+// Generate and Delete Chanks
 unsigned int Drive::GenerateChank()
 {
     if (m_DeletedMemoryList.Index > 0)
@@ -217,6 +218,7 @@ void Drive::LoadBody()
     }
 }
 
+// Directories Actions
 unsigned int Drive::CreateDirectory(const EntityName& name)
 {
     if (m_DirectoriesCount == MAX_DIRECTORIES)
@@ -290,6 +292,13 @@ void Drive::DeleteDirectory(unsigned char directoryIndex)
 void Drive::DeleteDirectory(const EntityName& name)
 {
     // use Directory class
+}
+
+
+// Files Actions
+unsigned int Drive::CreateFile(const EntityName& name, unsigned int size)
+{
+    // need code
 }
 
 void Drive::DeleteFile(unsigned char fileIndex)

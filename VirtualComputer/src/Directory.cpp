@@ -29,6 +29,7 @@ void Directory::LoadBody()
     }
 }
 
+// Directories Actions
 unsigned int Directory::CreateDirectory(const EntityName& name)
 {
     if (m_DirectoriesCount == MAX_DIRECTORIES)
@@ -131,6 +132,12 @@ void Directory::DeleteDirectory(unsigned char directoryIndex, const bool& first)
 void Directory::DeleteDirectory(const EntityName& name)
 {
 
+}
+
+// Files Actions
+unsigned int Directory::CreateFile(const EntityName& name, unsigned int size)
+{
+    // need code
 }
 
 void Directory::DeleteFile(unsigned char fileIndex, const bool& first)
