@@ -14,4 +14,3 @@ public:
 	unsigned int m_FilesLocations[MAX_DIRECTORIES];
 	SmartEntityName m_FilesNames[MAX_DIRECTORIES];
 };
-

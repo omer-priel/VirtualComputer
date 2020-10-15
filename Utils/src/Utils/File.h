@@ -36,7 +36,7 @@ namespace Utils
 		std::fstream m_Stream;
 		size_t m_Index = 0;
 		bool m_IndexChanged = true;
-		FileMode m_Mode;
+		FileMode m_Mode = FileMode::Read;
 
 	public:
 
