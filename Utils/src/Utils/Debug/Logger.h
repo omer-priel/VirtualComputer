@@ -27,7 +27,9 @@ namespace Utils::Debug
 
 	// Static
 	private:
+#ifdef _DEBUG
 		static Level s_LoggerLevel;
+#endif
 
 	public:
 
@@ -42,6 +44,7 @@ namespace Utils::Debug
 		template<typename... T>
 		static void Error(const T&... args)
 		{
+#ifdef _DEBUG
 			std::cout << "[Error]: ";
 			IterateVariadic([&](auto& arg)
 				{
@@ -49,11 +52,13 @@ namespace Utils::Debug
 				},
 				args...);
 			std::cout << "\n";
+#endif
 		}
 
 		template<typename... T>
 		static void Warning(const T&... args)
 		{
+#ifdef _DEBUG
 			if (s_LoggerLevel >= Level::Warning)
 			{
 				std::cout << "[Warning]: ";
@@ -64,11 +69,13 @@ namespace Utils::Debug
 					args...);
 				std::cout << "\n";
 			}
+#endif
 		}
 
 		template<typename... T>
 		static void Info(const T&... args)
 		{
+#ifdef _DEBUG
 			if (s_LoggerLevel >= Level::Info)
 			{
 				std::cout << "[Info]: ";
@@ -79,11 +86,13 @@ namespace Utils::Debug
 					args...);
 				std::cout << "\n";
 			}
+#endif
 		}
 		
 		template<typename... T>
 		static void Debug(const T&... args)
 		{
+#ifdef _DEBUG
 			std::cout << "[Debug]: ";
 			IterateVariadic([&](auto& arg)
 				{
@@ -91,6 +100,7 @@ namespace Utils::Debug
 				},
 				args...);
 			std::cout << "\n";
+#endif _DEBUG
 		}
 	};
 }
