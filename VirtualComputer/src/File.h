@@ -15,6 +15,7 @@ class File : public MemoryEntity
 
 	// Static
 public:
+	static unsigned int Create(Drive* drive, const EntityName& name, unsigned int size = 0);
 	static void DeleteFileBody(Drive* drive, unsigned int chankIndex);
 
 	// None-Static

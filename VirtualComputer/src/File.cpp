@@ -2,11 +2,18 @@
 #include "File.h"
 
 // Static
+unsigned int File::Create(Drive* drive, const EntityName& name, unsigned int size = 0)
+{
+
+}
+
 void File::DeleteFileBody(Drive* drive, unsigned int chankIndex)
 {
     drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
-
+    
     unsigned int size = drive->m_FileStream.Read<unsigned char>();
+
+    drive->DeleteChank(chankIndex);
 
     if (size > FIRST_FILE_BODY_SIZE)
     {
@@ -18,6 +25,7 @@ void File::DeleteFileBody(Drive* drive, unsigned int chankIndex)
         {
             drive->GoToChank(chankIndex, CHANK_SIZE - 4);
             drive->DeleteChank(chankIndex);
+
             if (CHANK_SIZE - 4 > size)
             {
                 break;
