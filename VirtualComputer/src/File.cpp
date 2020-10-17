@@ -6,29 +6,32 @@ unsigned int File::Create(Drive* drive, const EntityName& name, unsigned int siz
 {
     unsigned int chankIndex = drive->GenerateChank();
 
+    drive->GoToChank(chankIndex);
     drive->m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
     drive->m_FileStream.Write(size);
 
-    //size_t oldI = drive->m_FileStream.GetIndex();
-    //drive->m_FileStream.Close();
-    //drive->m_FileStream.Open("drvies//drive1.vhd.castum", false);
-    //drive->m_FileStream.ChangeIndex(oldI);
-    
     if (size > 0)
     {
         std::array<char, CHANK_SIZE> data;
         data.fill(0);
+
         drive->m_FileStream.Write(&data[0], FIRST_FILE_BODY_SIZE);
 
         if (size > FIRST_FILE_BODY_SIZE)
         {
             size -= FIRST_FILE_BODY_SIZE;
+            
+            unsigned chankIndexNow = chankIndex;
             while (size > 0)
             {
                 unsigned int nextChankIndex = drive->GenerateChank();
+                
+                drive->GoToChank(chankIndexNow, CHANK_SIZE - 4);
                 drive->m_FileStream.Write<unsigned int>(nextChankIndex);
 
-                drive->GoToChank(nextChankIndex);
+                chankIndexNow = nextChankIndex;
+
+                drive->GoToChank(chankIndexNow);
                 drive->m_FileStream.Write(&data[0], CHANK_SIZE - 4);
                 if (size > CHANK_SIZE - 4)
                 {
@@ -42,9 +45,6 @@ unsigned int File::Create(Drive* drive, const EntityName& name, unsigned int siz
         }
         drive->m_FileStream.Write<unsigned int>(0);
     }
-
-    size_t oldI = drive->m_FileStream.GetIndex();
-    drive->m_FileStream.Close();
 
     return chankIndex;
 }

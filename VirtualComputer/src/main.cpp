@@ -58,7 +58,7 @@ void Test()
     std::cin >> code;
     if (code == 1)
     {
-        drive->CreateFile(CreateName("text.txt"), CHANK_SIZE * 3);
+        drive->CreateFile(CreateName("text.txt"), CHANK_SIZE * 6);
     }
     else if (code == 2)
     {

@@ -115,25 +115,24 @@ void Drive::GoToChank(unsigned int chankIndex, size_t indexInTheChank)
 // Generate and Delete Chanks
 unsigned int Drive::GenerateChank()
 {
+    unsigned int chankIndex;
     if (m_DeletedMemoryList.Index > 0)
     {
         // Give Deleted Chank
         m_DeletedMemoryList.Index--;
 
-        int chankIndex = m_DeletedMemoryList.List[m_DeletedMemoryList.Index];
+        chankIndex = m_DeletedMemoryList.List[m_DeletedMemoryList.Index];
         m_DeletedMemoryList.List[m_DeletedMemoryList.Index] = 0;
         
         GoToChank(m_DeletedMemoryList.ChankIndex, m_DeletedMemoryList.Index);
         m_FileStream.Write<unsigned int>(0);
-
-        return chankIndex;
     }
     else
     {
         if (m_DeletedMemoryList.ChankIndex != 1)
         {
             // Give DeletedMemoryList Chank
-            int chankIndex = m_DeletedMemoryList.ChankIndex;
+            chankIndex = m_DeletedMemoryList.ChankIndex;
 
             m_DeletedMemoryListChanks.pop_back();
 
@@ -146,15 +145,15 @@ unsigned int Drive::GenerateChank()
 
             m_FileStream.Write<unsigned int>(0);
             m_DeletedMemoryList.NextDeletedMemoryList = 0;
-            return chankIndex;
         }
         else
         {
             // Generate new Chank
-            int chankIndex = m_ChanksCount;
+            chankIndex = m_ChanksCount;
             m_ChanksCount++;
-            return chankIndex;
         }
+
+        return chankIndex;
     }
 }
 
