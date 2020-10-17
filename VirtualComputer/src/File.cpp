@@ -4,7 +4,42 @@
 // Static
 unsigned int File::Create(Drive* drive, const EntityName& name, unsigned int size)
 {
+    unsigned int chankIndex = drive->GenerateChank();
+
+    drive->GoToChank(chankIndex);
+    drive->m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
+    drive->m_FileStream.Write(size);
     
+    if (size > 0)
+    {
+        std::array<char, CHANK_SIZE> data;
+        data.fill(0);
+        drive->m_FileStream.Write(&data[0], FIRST_FILE_BODY_SIZE);
+
+        if (size > FIRST_FILE_BODY_SIZE)
+        {
+            size -= FIRST_FILE_BODY_SIZE;
+            while (size > 0)
+            {
+                unsigned int nextChankIndex = drive->GenerateChank();
+                drive->m_FileStream.Write<unsigned int>(nextChankIndex);
+
+                drive->GoToChank(chankIndex);
+                drive->m_FileStream.Write(&data[0], CHANK_SIZE - 4);
+                if (size > CHANK_SIZE - 4)
+                {
+                    size -= CHANK_SIZE - 4;
+                }
+                else
+                {
+                    size = 0;
+                }
+            }
+        }
+        drive->m_FileStream.Write<unsigned int>(0);
+    }
+
+    return chankIndex;
 }
 
 void File::DeleteFileBody(Drive* drive, unsigned int chankIndex)
