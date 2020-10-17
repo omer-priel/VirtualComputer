@@ -269,7 +269,6 @@ unsigned int Drive::CreateDirectory(const EntityName& name)
 
 void Drive::DeleteDirectory(unsigned char directoryIndex)
 {
-    // use Directory class
     unsigned int chankIndex = m_DirectoriesLocations[directoryIndex];
 
     Directory directory(chankIndex, this);
@@ -298,7 +297,16 @@ void Drive::DeleteDirectory(unsigned char directoryIndex)
 
 void Drive::DeleteDirectory(const EntityName& name)
 {
-    // use Directory class
+
+}
+
+void Drive::RenameDirectory(unsigned char directoryIndex, const EntityName& name)
+{
+    unsigned int chankIndex = m_DirectoriesLocations[directoryIndex];
+    m_DirectoriesNames[directoryIndex].Change(name);
+
+    GoToChank(chankIndex);
+    m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
 }
 
 
@@ -348,4 +356,13 @@ void Drive::DeleteFile(unsigned char fileIndex)
 void Drive::DeleteFile(const EntityName& name)
 {
 
+}
+
+void Drive::RenameFile(unsigned char fileIndex, const EntityName& name)
+{
+    unsigned int chankIndex = m_FilesLocations[fileIndex];
+    m_FilesNames[fileIndex].Change(name);
+
+    GoToChank(chankIndex);
+    m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
 }

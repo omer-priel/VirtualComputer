@@ -58,7 +58,7 @@ void Test()
     std::cin >> code;
     if (code == 1)
     {
-        drive->CreateFile(CreateName("text.txt"), CHANK_SIZE * 6);
+        drive->CreateFile(CreateName("File.txt"), CHANK_SIZE * 6);
     }
     else if (code == 2)
     {
@@ -66,11 +66,19 @@ void Test()
     }
     else if (code == 3)
     {
-        drive->CreateDirectory(CreateName("New Folder"));
+        drive->RenameFile(0, CreateName("Rename File.txt"));
     }
     else if (code == 4)
     {
+        drive->CreateDirectory(CreateName("Folder"));
+    }
+    else if (code == 5)
+    {
         drive->DeleteDirectory(0);
+    }
+    else if (code == 6)
+    {
+        drive->RenameDirectory(0, CreateName("Rename Folder"));
     }
 }
 

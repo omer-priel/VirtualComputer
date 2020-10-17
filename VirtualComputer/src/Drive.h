@@ -90,9 +90,13 @@ public:
 	void DeleteDirectory(unsigned char directoryIndex);
 	void DeleteDirectory(const EntityName& name);
 
+	void RenameDirectory(unsigned char directoryIndex, const EntityName& name);
+
 	unsigned int CreateFile(const EntityName& name, unsigned int size);
 
 	void DeleteFile(unsigned char fileIndex);
 	void DeleteFile(const EntityName& name);
+
+	void RenameFile(unsigned char fileIndex, const EntityName& name);
 };
 

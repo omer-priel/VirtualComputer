@@ -134,6 +134,15 @@ void Directory::DeleteDirectory(const EntityName& name)
 
 }
 
+void Directory::RenameDirectory(unsigned char directoryIndex, const EntityName& name)
+{
+    unsigned int chankIndex = m_DirectoriesLocations[directoryIndex];
+    m_DirectoriesNames[directoryIndex].Change(name);
+
+    m_Drive->GoToChank(chankIndex);
+    m_Drive->m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
+}
+
 // Files Actions
 unsigned int Directory::CreateFile(const EntityName& name, unsigned int size)
 {
@@ -182,4 +191,13 @@ void Directory::DeleteFile(unsigned char fileIndex, const bool& first)
 void Directory::DeleteFile(const EntityName& name)
 {
 
+}
+
+void Directory::RenameFile(unsigned char fileIndex, const EntityName& name)
+{
+    unsigned int chankIndex = m_FilesLocations[fileIndex];
+    m_FilesNames[fileIndex].Change(name);
+
+    m_Drive->GoToChank(chankIndex);
+    m_Drive->m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
 }
