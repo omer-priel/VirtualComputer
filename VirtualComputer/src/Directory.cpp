@@ -138,18 +138,16 @@ void Directory::DeleteDirectory(const EntityName& name)
 unsigned int Directory::CreateFile(const EntityName& name, unsigned int size)
 {
     unsigned int chankIndex = File::Create(m_Drive, name, size);
-    if (chankIndex != 0)
-    {
-        m_FilesLocations[m_FilesCount] = chankIndex;
-        m_FilesNames[m_FilesCount] = name;
+    
+    m_FilesLocations[m_FilesCount] = chankIndex;
+    m_FilesNames[m_FilesCount] = name;
 
-        m_FilesCount++;
+    m_FilesCount++;
 
-        m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + 1 + MAX_DIRECTORIES * 4);
-        m_Drive->m_FileStream.Write(m_FilesCount);
-        m_Drive->m_FileStream += (m_FilesCount - 1) * 4;
-        m_Drive->m_FileStream.Write(chankIndex);
-    }
+    m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + 1 + MAX_DIRECTORIES * 4);
+    m_Drive->m_FileStream.Write(m_FilesCount);
+    m_Drive->m_FileStream += (m_FilesCount - 1) * 4;
+    m_Drive->m_FileStream.Write(chankIndex);
 }
 
 void Directory::DeleteFile(unsigned char fileIndex, const bool& first)

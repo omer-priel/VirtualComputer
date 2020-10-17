@@ -4,7 +4,7 @@
 // Static
 unsigned int File::Create(Drive* drive, const EntityName& name, unsigned int size)
 {
-
+    
 }
 
 void File::DeleteFileBody(Drive* drive, unsigned int chankIndex)
