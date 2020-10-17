@@ -148,6 +148,8 @@ unsigned int Directory::CreateFile(const EntityName& name, unsigned int size)
     m_Drive->m_FileStream.Write(m_FilesCount);
     m_Drive->m_FileStream += (m_FilesCount - 1) * 4;
     m_Drive->m_FileStream.Write(chankIndex);
+
+    return chankIndex;
 }
 
 void Directory::DeleteFile(unsigned char fileIndex, const bool& first)

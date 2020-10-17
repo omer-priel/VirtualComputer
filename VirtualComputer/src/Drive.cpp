@@ -309,6 +309,8 @@ unsigned int Drive::CreateFile(const EntityName& name, unsigned int size)
     m_FileStream.Write(m_FilesCount);
     m_FileStream += (m_FilesCount - 1) * 4;
     m_FileStream.Write(chankIndex);
+
+    return chankIndex;
 }
 
 void Drive::DeleteFile(unsigned char fileIndex)

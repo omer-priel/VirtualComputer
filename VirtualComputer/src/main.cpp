@@ -53,13 +53,22 @@ void Test()
 {
     drive = Drive::s_DriveCurrent;
     
+    std::cout << "Code: ";
     int code;
     std::cin >> code;
     if (code == 1)
     {
-        drive->CreateDirectory(CreateName("New Folder"));
+        drive->CreateFile(CreateName("text.txt"), CHANK_SIZE * 3);
     }
     else if (code == 2)
+    {
+        drive->DeleteFile(0);
+    }
+    else if (code == 3)
+    {
+        drive->CreateDirectory(CreateName("New Folder"));
+    }
+    else if (code == 4)
     {
         drive->DeleteDirectory(0);
     }
