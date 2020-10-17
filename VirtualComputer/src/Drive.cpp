@@ -115,6 +115,8 @@ void Drive::GoToChank(unsigned int chankIndex, size_t indexInTheChank)
 // Generate and Delete Chanks
 unsigned int Drive::GenerateChank()
 {
+    size_t originStreamFileIndex = m_FileStream.GetIndex();
+
     unsigned int chankIndex;
     if (m_DeletedMemoryList.Index > 0)
     {
@@ -124,7 +126,7 @@ unsigned int Drive::GenerateChank()
         chankIndex = m_DeletedMemoryList.List[m_DeletedMemoryList.Index];
         m_DeletedMemoryList.List[m_DeletedMemoryList.Index] = 0;
         
-        GoToChank(m_DeletedMemoryList.ChankIndex, m_DeletedMemoryList.Index);
+        GoToChank(m_DeletedMemoryList.ChankIndex, m_DeletedMemoryList.Index * 4);
         m_FileStream.Write<unsigned int>(0);
     }
     else
@@ -152,13 +154,17 @@ unsigned int Drive::GenerateChank()
             chankIndex = m_ChanksCount;
             m_ChanksCount++;
         }
-
-        return chankIndex;
     }
+
+    m_FileStream.ChangeIndex(originStreamFileIndex);
+
+    return chankIndex;
 }
 
 void Drive::DeleteChank(unsigned int chankIndex)
 {
+    size_t originStreamFileIndex = m_FileStream.GetIndex();
+
     if (m_DeletedMemoryList.Index < DELETED_MEMORY_LIST_SIZE)
     {
         m_DeletedMemoryList.List[m_DeletedMemoryList.Index] = chankIndex;
@@ -188,6 +194,8 @@ void Drive::DeleteChank(unsigned int chankIndex)
         m_FileStream.Write(m_DeletedMemoryList.List);
         m_FileStream.Write(m_DeletedMemoryList.NextDeletedMemoryList);
     }
+
+    m_FileStream.ChangeIndex(originStreamFileIndex);
 
     Logger::Info("Chank ", chankIndex, " deleted.");
 }
@@ -316,9 +324,7 @@ void Drive::DeleteFile(unsigned char fileIndex)
 {
     unsigned int chankIndex = m_FilesLocations[fileIndex];
 
-    File::DeleteFileBody(this, chankIndex);
-
-    DeleteChank(chankIndex);
+    File::DeleteFile(this, chankIndex);
 
     m_FilesCount--;
 

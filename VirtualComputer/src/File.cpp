@@ -49,18 +49,19 @@ unsigned int File::Create(Drive* drive, const EntityName& name, unsigned int siz
     return chankIndex;
 }
 
-void File::DeleteFileBody(Drive* drive, unsigned int chankIndex)
+void File::DeleteFile(Drive* drive, unsigned int chankIndex)
 {
     drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
     
-    unsigned int size = drive->m_FileStream.Read<unsigned char>();
+    unsigned int size = drive->m_FileStream.Read<unsigned int>();
 
     drive->DeleteChank(chankIndex);
 
     if (size > FIRST_FILE_BODY_SIZE)
     {
         drive->m_FileStream += FIRST_FILE_BODY_SIZE;
-        chankIndex = drive->m_FileStream.Read<unsigned char>();
+
+        chankIndex = drive->m_FileStream.Read<unsigned int>();
         size -= FIRST_FILE_BODY_SIZE;
 
         while (size > 0)
@@ -75,7 +76,7 @@ void File::DeleteFileBody(Drive* drive, unsigned int chankIndex)
             else
             {
                 size -= CHANK_SIZE - 4;
-                chankIndex = drive->m_FileStream.Read<unsigned char>();
+                chankIndex = drive->m_FileStream.Read<unsigned int>();
             }
         }
     }

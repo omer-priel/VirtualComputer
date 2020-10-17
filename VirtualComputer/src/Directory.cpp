@@ -156,10 +156,8 @@ void Directory::DeleteFile(unsigned char fileIndex, const bool& first)
 {
     unsigned int chankIndex = m_FilesLocations[fileIndex];
 
-    File::DeleteFileBody(m_Drive, chankIndex);
+    File::DeleteFile(m_Drive, chankIndex);
     
-    m_Drive->DeleteChank(chankIndex);
-
     m_FilesCount--;
     if (first)
     {
