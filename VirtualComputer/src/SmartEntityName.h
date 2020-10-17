@@ -19,6 +19,12 @@ public:
 		m_Name[MAX_ENTITY_NAME] = 0; // last byte for print
 	}
 
+	SmartEntityName(const EntityName& name)
+	{
+		m_NameLoaded = true;
+		m_Name = name;
+	}
+
 	void LoadName(Utils::File& fileStream);
 	
 	char* GetName();

@@ -2,7 +2,7 @@
 #include "File.h"
 
 // Static
-unsigned int File::Create(Drive* drive, const EntityName& name, unsigned int size = 0)
+unsigned int File::Create(Drive* drive, const EntityName& name, unsigned int size)
 {
 
 }
