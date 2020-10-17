@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VirtualComputer", "VirtualComputer", "{EBAB2E07-FAFA-4564-9AF8-5740F1E8572A}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		Plan.txt = Plan.txt
 		README.md = README.md
 	EndProjectSection
 EndProject
