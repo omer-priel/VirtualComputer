@@ -68,7 +68,12 @@ namespace Commands
         }
         else if (!action.compare("echo"))
         {
+            int i = command.find("echo") + 5;
 
+            if (i < command.size())
+            {
+                std::cout << (char*)(command.c_str() + i) << "\n"; \
+            }
         }
         else
         {
