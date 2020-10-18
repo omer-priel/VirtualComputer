@@ -17,13 +17,18 @@ EntityName CreateName(const char* name)
     return ret;
 }
 
-char s_StartLine[50];
+char s_StartLine[MAX_COMMAND_SIZE];
 
 void ChangeStartLine(const char* line, size_t size)
 {    
     memcpy(s_StartLine, line, size);
     s_StartLine[size] = ' ';
     s_StartLine[size + 1] = 0;
+}
+
+static void DoCommand(std::string& command, std::vector<std::string>& commandParts)
+{
+    // Do Command
 }
 
 int main()
@@ -46,7 +51,8 @@ int main()
     ChangeStartLine("A:\\>", 4);
 
     // Start Runing
-    while (true)
+    bool running = true;
+    while (running)
     {
         // Get Command
         std::string command;
@@ -55,57 +61,93 @@ int main()
         std::getline(std::cin, command);
 
         // do
-        if (command.empty())
+        if (command.size() > MAX_COMMAND_SIZE)
         {
+            Logger::Error("The cammand can't be bigger then ", MAX_COMMAND_SIZE, "!");
             continue;
         }
 
-        std::vector<std::string_view> commandParts;
+        std::vector<std::string> commandParts;
 
-        int startPart = 0;
-        int i = 0;
+        char commandPart[MAX_COMMAND_SIZE];
+        int partIndex = 0;
         bool inString = false;
 
-        while (i < command.size())
+        for (char tv : command)
         {
             if (inString)
             {
-                if (command[i] == '\"')
+                if (tv == '\"')
                 {
                     inString = false;
                 }
-                i++;
+                else
+                {
+                    commandPart[partIndex] = tv;
+                    partIndex++;
+                }
             }
             else
             {
-                if (command[i] == '\"')
+                if (tv == '\"')
                 {
                     inString = true;
                 }
-                else if (command[i] == ' ' || command[i] == '\t')
+                else if (tv == ' ' || tv == '\t')
                 {
-                    if (i == startPart)
+                    if (partIndex == 0)
                     {
-                        i++;
-                        startPart++;
                         continue;
                     }
                     else
                     {
-                        commandParts.emplace_back(command.c_str() + startPart, i - startPart - 1);
-                        
-                        i++;
-                        startPart = i;
+                        commandPart[partIndex] = 0;
+                        commandParts.emplace_back(commandPart);
+
+                        partIndex = 0;
                         continue;
                     }
                 }
-                i++;
+                else
+                {
+                    commandPart[partIndex] = tv;
+                    partIndex++;
+                }
             }
         }
 
-        std::string_view action(command.c_str(), 1);
+        if (inString)
+        {
+            Logger::Error("Command syntex error!");
+            continue;
+        }
+
+        if (partIndex != 0)
+        {
+            commandPart[partIndex] = 0;
+            commandParts.emplace_back(commandPart);
+        }
+
+        if (commandParts.empty())
+        {
+            continue;
+        }
+
+        // make command lower ("ECHO" to "echo")
+        for (auto& tv : commandParts[0])
+        {
+            tv = std::tolower(tv);
+        }
+
+        if (!commandParts[0].compare("exit"))
+        {
+            break;
+        }
+        else
+        {
+            DoCommand(command, commandParts);
+        }
     }
 
     Utils::Debug::DebugTrace::EndSession();
-    system("PAUSE");
 }
