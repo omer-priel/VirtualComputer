@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "HelpBody.h"
+#include "Drive.h"
 
 namespace Commands
 {
@@ -20,7 +21,12 @@ namespace Commands
         }
         else if (!action.compare("drives"))
         {
-
+            std::cout << "Drives exists:\n";
+            for (size_t i = 0; i < Drive::s_DrivesActives; i++)
+            {
+                std::cout << "  " << Drive::s_Drives[i]->m_DriveName << ":\n";
+            }
+            std::cout << "\n";
         }
         else if (!action.compare("dir"))
         {

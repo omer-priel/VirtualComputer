@@ -16,6 +16,7 @@ const char* s_HelpBody = R"V0G0N(
 	print  - Show file
 	edit   - Edit file
 	echo   - Print text
+
 )V0G0N";
 
 char* HelpBody()
