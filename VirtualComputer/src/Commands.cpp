@@ -30,7 +30,14 @@ namespace Commands
         }
         else if (!action.compare("help"))
         {
-            Help();
+            if (helpMode)
+            {
+                // Need Code
+            }
+            else
+            {
+                Help();
+            }
         }
         else if (!action.compare("drives"))
         {
