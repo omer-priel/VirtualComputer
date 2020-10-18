@@ -33,7 +33,7 @@ namespace Commands
             if (helpMode)
             {
                 std::cout
-                    << "Sow help information for commands.\n"
+                    << "Show help information for commands.\n"
                     << "\n"
                     << "    help [command]\n"
                     << "        command - displays help information on that command.\n";
