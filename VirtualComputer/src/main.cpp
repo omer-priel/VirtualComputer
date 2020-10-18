@@ -1,8 +1,9 @@
 #include "pch.h"
 
 #include "Drive.h"
+#include "Commands.h"
 
-EntityName CreateName(const char* name)
+static EntityName CreateName(const char* name)
 {
     EntityName ret;
     ret.fill(0);
@@ -17,18 +18,13 @@ EntityName CreateName(const char* name)
     return ret;
 }
 
-char s_StartLine[MAX_COMMAND_SIZE];
+static char s_StartLine[MAX_COMMAND_SIZE];
 
-void ChangeStartLine(const char* line, size_t size)
+static void ChangeStartLine(const char* line, size_t size)
 {    
     memcpy(s_StartLine, line, size);
     s_StartLine[size] = ' ';
     s_StartLine[size + 1] = 0;
-}
-
-static void DoCommand(std::string& command, std::vector<std::string>& commandParts)
-{
-    // Do Command
 }
 
 int main()
@@ -48,6 +44,7 @@ int main()
         return 1;
     }
 
+    //load StartLine
     ChangeStartLine("A:\\>", 4);
 
     // Start Runing
@@ -139,14 +136,7 @@ int main()
             tv = std::tolower(tv);
         }
 
-        if (!commandParts[0].compare("exit"))
-        {
-            break;
-        }
-        else
-        {
-            DoCommand(command, commandParts);
-        }
+        running = Commands::DoCommand(command, commandParts);
     }
 
     Utils::Debug::DebugTrace::EndSession();

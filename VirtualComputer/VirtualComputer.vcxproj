@@ -163,6 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Commands.cpp" />
     <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\SmartEntityName.cpp" />
     <ClCompile Include="src\MemoryEntity.cpp" />
@@ -178,8 +179,10 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Commands.h" />
     <ClInclude Include="src\Directory.h" />
     <ClInclude Include="src\File.h" />
+    <ClInclude Include="src\HelpBody.h" />
     <ClInclude Include="src\SmartEntityName.h" />
     <ClInclude Include="src\MemoryEntity.h" />
     <ClInclude Include="src\DirectoryBody.h" />

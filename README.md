@@ -8,6 +8,7 @@ drives/drive1.vhd
 
 Commands:
 exit - Exit the program
+help - Show all the commands
 drives - Show drives list
 dir - Show directory
 md - Create directory
