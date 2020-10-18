@@ -32,7 +32,11 @@ namespace Commands
         {
             if (helpMode)
             {
-                // Need Code
+                std::cout
+                    << "Sow help information for commands.\n"
+                    << "\n"
+                    << "    help [command]\n"
+                    << "        command - displays help information on that command.\n";
             }
             else
             {
