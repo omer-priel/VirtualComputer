@@ -10,10 +10,23 @@ namespace Commands
 {
     bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
-        std::string& action = commandParts[0];
+        std::string_view action(commandParts[0]);
+        bool helpMode = !action.compare("help") && commandParts.size() > 1;
+        if (helpMode)
+        {
+            action = std::string_view(commandParts[1]);
+        }
+
         if (!action.compare("exit"))
         {
-            return false;
+            if (helpMode)
+            {
+                // Need Code
+            }
+            else
+            {
+                return false;
+            }
         }
         else if (!action.compare("help"))
         {
@@ -21,12 +34,19 @@ namespace Commands
         }
         else if (!action.compare("drives"))
         {
-            std::cout << "Drives exists:\n";
-            for (size_t i = 0; i < Drive::s_DrivesActives; i++)
+            if (helpMode)
             {
-                std::cout << "  " << Drive::s_Drives[i]->m_DriveName << ":\n";
+                // Need Code
             }
-            std::cout << "\n";
+            else
+            {
+                std::cout << "Drives exists:\n";
+                for (size_t i = 0; i < Drive::s_DrivesActives; i++)
+                {
+                    std::cout << "  " << Drive::s_Drives[i]->m_DriveName << ":\n";
+                }
+                std::cout << "\n";
+            }
         }
         else if (!action.compare("dir"))
         {
