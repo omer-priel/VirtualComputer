@@ -1,36 +1,6 @@
 #include "pch.h"
 
 #include "Drive.h"
-#include "Directory.h"
-
-void PrintDirectoryBody(DirectoryBody* directoryBody)
-{
-    std::cout << "Directories:\n";
-    for (unsigned char i = 0; i < directoryBody->m_DirectoriesCount; i++)
-    {
-        std::cout << directoryBody->m_DirectoriesNames[i].GetName() << "\n";
-    }
-    std::cout << "\n";
-
-    std::cout << "Files:\n";
-    for (unsigned char i = 0; i < directoryBody->m_FilesCount; i++)
-    {
-        std::cout << directoryBody->m_FilesNames[i].GetName() << "\n";
-    }
-    std::cout << "\n";
-}
-
-void PrintDrive(Drive* drive)
-{
-    std::cout << "Drive " << drive->m_DriveName << ":\n";
-    PrintDirectoryBody(drive);
-}
-
-void PrintDirectory(Directory* directory)
-{
-    std::cout << "Directory " << directory->m_Name.GetName() << ":\n";
-    PrintDirectoryBody(directory);
-}
 
 EntityName CreateName(const char* name)
 {
@@ -47,45 +17,21 @@ EntityName CreateName(const char* name)
     return ret;
 }
 
-Drive* drive;
+char s_StartLine[50];
 
-void Test()
-{
-    drive = Drive::s_DriveCurrent;
-    
-    std::cout << "Code: ";
-    int code;
-    std::cin >> code;
-    if (code == 1)
-    {
-        drive->CreateFile(CreateName("File.txt"), CHANK_SIZE * 6);
-    }
-    else if (code == 2)
-    {
-        drive->DeleteFile(0);
-    }
-    else if (code == 3)
-    {
-        drive->RenameFile(0, CreateName("Rename File.txt"));
-    }
-    else if (code == 4)
-    {
-        drive->CreateDirectory(CreateName("Folder"));
-    }
-    else if (code == 5)
-    {
-        drive->DeleteDirectory(0);
-    }
-    else if (code == 6)
-    {
-        drive->RenameDirectory(0, CreateName("Rename Folder"));
-    }
+void ChangeStartLine(const char* line, size_t size)
+{    
+    memcpy(s_StartLine, line, size);
+    s_StartLine[size] = ' ';
+    s_StartLine[size + 1] = 0;
 }
 
 int main()
 {
     Utils::Debug::DebugTrace::BeginSession();
     Logger::ChangeLevel(Logger::Level::Warning);
+
+    // Load Compuer
 
     // Load Drives
     bool haveError = false;
@@ -97,25 +43,69 @@ int main()
         return 1;
     }
 
-    // Start Runing
-    for (Drive* drive : Drive::s_Drives)
-    {
-        if (drive != nullptr)
-        {
-            PrintDrive(drive);
-        }
-    }
-    
-    Test();
+    ChangeStartLine("A:\\>", 4);
 
-    for (Drive* drive : Drive::s_Drives)
+    // Start Runing
+    while (true)
     {
-        if (drive != nullptr)
+        // Get Command
+        std::string command;
+        
+        std::cout << s_StartLine;
+        std::getline(std::cin, command);
+
+        // do
+        if (command.empty())
         {
-            PrintDrive(drive);
+            continue;
         }
+
+        std::vector<std::string_view> commandParts;
+
+        int startPart = 0;
+        int i = 0;
+        bool inString = false;
+
+        while (i < command.size())
+        {
+            if (inString)
+            {
+                if (command[i] == '\"')
+                {
+                    inString = false;
+                }
+                i++;
+            }
+            else
+            {
+                if (command[i] == '\"')
+                {
+                    inString = true;
+                }
+                else if (command[i] == ' ' || command[i] == '\t')
+                {
+                    if (i == startPart)
+                    {
+                        i++;
+                        startPart++;
+                        continue;
+                    }
+                    else
+                    {
+                        commandParts.emplace_back(command.c_str() + startPart, i - startPart - 1);
+                        
+                        i++;
+                        startPart = i;
+                        continue;
+                    }
+                }
+                i++;
+            }
+        }
+
+        std::string_view action(command.c_str(), 1);
     }
 
     Utils::Debug::DebugTrace::EndSession();
-    system("PAUSE");//std::cout << "Press any key to continue . . .";
+    system("PAUSE");
 }
