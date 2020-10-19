@@ -34,13 +34,24 @@ unsigned int Directory::CreateDirectory(const EntityName& name)
 {
     if (m_DirectoriesCount == MAX_DIRECTORIES)
     {
-        Logger::Error("Can't create Directorie");
+        Logger::Error("Can't create more then ", MAX_DIRECTORIES, " directories!");
         return 0;
     }
+
+    // Can't be name - need code
 
     for (unsigned char i = 0; i < m_DirectoriesCount; i++)
     {
         if (m_DirectoriesNames[i].IsEqual(name))
+        {
+            Logger::Error("This Name already exist!");
+            return 0;
+        }
+    }
+
+    for (unsigned char i = 0; i < m_FilesCount; i++)
+    {
+        if (m_FilesNames[i].IsEqual(name))
         {
             Logger::Error("This Name already exist!");
             return 0;
@@ -146,6 +157,32 @@ void Directory::RenameDirectory(unsigned char directoryIndex, const EntityName& 
 // Files Actions
 unsigned int Directory::CreateFile(const EntityName& name, unsigned int size)
 {
+    if (m_FilesCount == MAX_FILES)
+    {
+        Logger::Error("Can't create more then ", MAX_FILES, " files!");
+        return 0;
+    }
+
+    // Can't be name - need code
+
+    for (unsigned char i = 0; i < m_DirectoriesCount; i++)
+    {
+        if (m_DirectoriesNames[i].IsEqual(name))
+        {
+            Logger::Error("This Name already exist!");
+            return 0;
+        }
+    }
+
+    for (unsigned char i = 0; i < m_FilesCount; i++)
+    {
+        if (m_FilesNames[i].IsEqual(name))
+        {
+            Logger::Error("This Name already exist!");
+            return 0;
+        }
+    }
+
     unsigned int chankIndex = File::Create(m_Drive, name, size);
     
     m_FilesLocations[m_FilesCount] = chankIndex;
