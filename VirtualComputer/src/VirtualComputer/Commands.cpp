@@ -8,6 +8,21 @@
 
 namespace VirtualComputer::Commands
 {
+    // commands help functions
+    static void HelpDrives()
+    {
+        std::cout
+            << "Mange the Drives.\n"
+            << "\n"
+            << "    drives [/s | /show] - Show the drives.\n"
+            << "    drives [/c | /create] - Create new drive.\n"
+            << "    drives [/d | /delete] [name] - Delete drive.\n"
+            << "        name - Drive name\n";
+    }
+
+    // commands functions
+
+
     bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
         std::string_view action(commandParts[0]);
@@ -30,7 +45,7 @@ namespace VirtualComputer::Commands
         {
             if (helpMode)
             {
-                // Need Code
+                std::cout << "Quits the Virtual Computer.\n";
             }
             else
             {
@@ -56,16 +71,34 @@ namespace VirtualComputer::Commands
         {
             if (helpMode)
             {
-                // Need Code
+                HelpDrives();
             }
             else
             {
-                std::cout << "Drives exists:\n";
-                for (size_t i = 0; i < Drive::s_DrivesActives; i++)
+                if (commandParts.size() == 1 || !commandParts[1].compare("/s") || !commandParts[1].compare("/show")) // drives [/s | /show]
                 {
-                    std::cout << "  " << Drive::s_Drives[i]->m_DriveName << ":\n";
+                    std::cout << "Drives exists:\n";
+                    for (size_t i = 0; i < Drive::s_DrivesActives; i++)
+                    {
+                        std::cout << "  " << Drive::s_Drives[i]->m_DriveName << ":\n";
+                    }
+                    std::cout << "\n";
                 }
-                std::cout << "\n";
+                else
+                {
+                    if (!commandParts[1].compare("/c") || !commandParts[1].compare("/create")) // drives [/c | /create]
+                    {
+
+                    }
+                    else if (!commandParts[1].compare("/d") || !commandParts[1].compare("/delete")) // drives [/d | /delete] [name]
+                    {
+
+                    }
+                    else
+                    {
+                        HelpDrives();
+                    }
+                }
             }
         }
         else if (!action.compare("dir"))
