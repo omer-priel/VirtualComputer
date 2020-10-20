@@ -3,18 +3,18 @@
 #include <cstdarg>
 #include <any>
 
-template <typename Func>
-static void IterateVariadic(const Func&) {}
-
-template <typename Func, typename Arg, typename ... Args>
-static void IterateVariadic(const Func& func, Arg&& arg, Args&& ... args)
-{
-	func(std::forward<Arg>(arg));
-	IterateVariadic(func, std::forward<Args>(args)...);
-}
-
 namespace Utils::Debug
 {
+	template <typename Func>
+	static void IterateVariadic(const Func&) {}
+
+	template <typename Func, typename Arg, typename ... Args>
+	static void IterateVariadic(const Func& func, Arg&& arg, Args&& ... args)
+	{
+		func(std::forward<Arg>(arg));
+		IterateVariadic(func, std::forward<Args>(args)...);
+	}
+
 	class Logger
 	{
 	public:
