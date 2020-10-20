@@ -78,21 +78,32 @@ namespace VirtualComputer::Commands
                 if (commandParts.size() == 1 || !commandParts[1].compare("/s") || !commandParts[1].compare("/show")) // drives [/s | /show]
                 {
                     std::cout << "Drives exists:\n";
-                    for (size_t i = 0; i < Drive::s_DrivesActives; i++)
+                    for (Drive* drive : Drive::s_Drives)
                     {
-                        std::cout << "  " << Drive::s_Drives[i]->m_DriveName << ":\n";
+                        if (drive != nullptr)
+                        {
+                            std::cout << "  " << drive->m_DriveName << ":\n";
+                        }
                     }
                     std::cout << "\n";
                 }
                 else
                 {
-                    if (!commandParts[1].compare("/c") || !commandParts[1].compare("/create")) // drives [/c | /create]
+                    if (commandParts.size() == 2 && (!commandParts[1].compare("/c") || !commandParts[1].compare("/create"))) // drives [/c | /create]
                     {
-
+                        Drive* created = Drive::CreateDrive();
+                        if (created != nullptr)
+                        {
+                            std::cout << "The drive " << created->m_DriveName << ": created.\n";
+                        }
                     }
-                    else if (!commandParts[1].compare("/d") || !commandParts[1].compare("/delete")) // drives [/d | /delete] [name]
+                    else if (commandParts.size() == 3 && (!commandParts[1].compare("/d") || !commandParts[1].compare("/delete"))) // drives [/d | /delete] [name]
                     {
-
+                        char deleted = Drive::DeleteDrive(commandParts[2].c_str());
+                        if (deleted != 0)
+                        {
+                            std::cout << "The drive " << deleted << ": deleted.\n";
+                        }
                     }
                     else
                     {

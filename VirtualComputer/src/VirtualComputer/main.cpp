@@ -50,7 +50,9 @@ namespace VirtualComputer
         }
 
         //load StartLine
-        ChangeStartLine("A:\\>", 4);
+        std::string firstLine("A:\\>");
+        firstLine[0] = Drive::s_DriveCurrent->m_DriveName;
+        ChangeStartLine(firstLine.c_str(), 4);
 
         // Start Runing
         bool running = true;

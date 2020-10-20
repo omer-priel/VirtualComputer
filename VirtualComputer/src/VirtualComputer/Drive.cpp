@@ -28,60 +28,62 @@ namespace VirtualComputer
         }
 
         std::string drivePath = DIVERS_PATH;
-        drivePath += "//drive";
-        drivePath += (char)('1' + s_DrivesActives);
+        drivePath += "//drive01";
         drivePath += DIVER_EXTENSION;
-        char driveName = 'A';
+        
+        size_t numberIndex = strlen(DIVERS_PATH) + 7;
 
-        if (!Utils::File::Exists(drivePath.c_str())) // Not exist drives
+        char driveName = 'A';
+        for (int i = 0; i < MAX_DRIVES; i++)
         {
-            CreateDrive();
-        }
-        else
-        {
-            do
+            drivePath[numberIndex] = (char)('0' + ((i + 1) / 10));
+            drivePath[numberIndex + 1] = (char)('0' + ((i + 1) % 10));
+
+            if (Utils::File::Exists(drivePath.c_str()))
             {
-                s_Drives[s_DrivesActives] = new Drive(drivePath, driveName);
+                s_Drives[i] = new Drive(drivePath, driveName);
                 s_DrivesActives++;
 
-                if (s_DrivesActives == MAX_DRIVES)
+                if (Drive::s_DriveCurrent == nullptr)
                 {
-                    break;
+                    Drive::s_DriveCurrent = s_Drives[i];
                 }
+            }
 
-                drivePath = DIVERS_PATH;
-                drivePath += "//drive";
-                unsigned int driveId = s_DrivesActives + 1;
-                if (driveId >= 10)
-                {
-                    drivePath += (char)('0' + (driveId / 10));
-                }
-                drivePath += (char)('0' + (driveId % 10));
-                drivePath += DIVER_EXTENSION;
-
-                driveName++;
-
-            } while (Utils::File::Exists(drivePath.c_str()));
+            driveName++;
         }
 
-        s_DriveCurrent = s_Drives[0];
+        if (s_DrivesActives == 0) // Not exists drives
+        {
+            CreateDrive();
+            Drive::s_DriveCurrent = s_Drives[0];
+        }
     }
 
     Drive* Drive::CreateDrive()
     {
         if (s_DrivesActives == MAX_DRIVES)
         {
+            std::cout << "Can't create more the " << MAX_DRIVES << " drives.\n";
             return nullptr;
         }
+
+        int index = 0;
+        while (s_Drives[index] != nullptr)
+        {
+            index++;
+        }
+
         std::string drivePath = DIVERS_PATH;
         drivePath += "//drive";
-        unsigned int driveId = s_DrivesActives + 1;
-        if (driveId >= 10)
-        {
-            drivePath += (char)('0' + (driveId / 10));
-        }
-        drivePath += (char)('0' + (driveId % 10));
+        drivePath += (char)('0' + ((index + 1) / 10));
+        drivePath += (char)('0' + ((index + 1) % 10));
         drivePath += DIVER_EXTENSION;
+
+        if (Utils::File::Exists(drivePath.c_str()))
+        {
+            Utils::File::Resize(drivePath, 1);
+        }
 
         Utils::File fileStream(drivePath, true);
 
@@ -90,14 +92,63 @@ namespace VirtualComputer
         fileStream.Write(&data[0], data.size());
         fileStream.Close();
 
-        char driveName = (char)('A' + s_DrivesActives);
+        char driveName = (char)('A' + index);
 
         Drive* drive = new Drive(drivePath, driveName);
 
-        s_Drives[s_DrivesActives] = drive;
+        s_Drives[index] = drive;
         s_DrivesActives++;
 
         return drive;
+    }
+
+    char Drive::DeleteDrive(const char* name)
+    {
+        char index = DriveNameToIndex(name);
+        
+        if (index == -1)
+        {
+            std::cout << "Drive name syntex error!\n";
+            return 0;
+        }
+
+        Drive* drive = Drive::s_Drives[index];
+
+        if (drive == nullptr)
+        {
+            std::cout << "the drive not exists!\n";
+            return 0;
+        }
+
+        if (drive == Drive::s_DriveCurrent)
+        {
+            std::cout << "Can't delete the current drive!\n";
+            return 0;
+        }
+
+        // need code - need Utils::File::Delete function
+
+        return ('A' + index);
+    }
+
+    char Drive::DriveNameToIndex(const char* name)
+    {
+        size_t size = strlen(name);
+        
+        if (size == 1 || (size == 2 && name[1] == ':'))
+        {
+            if ('a' <= name[0] && name[0] <= 'z')
+            {
+                return name[0] - 'a';
+            }
+
+            if ('A' <= name[0] && name[0] <= 'Z')
+            {
+                return name[0] - 'A';
+            }
+        }
+
+        return -1;
     }
 
     constexpr size_t Drive::ChankToFileIndex(const unsigned int& chankIndex)
