@@ -492,6 +492,17 @@ namespace VirtualComputer::Commands
                 }
             }
         }
+        else if (!action.compare("clear"))
+        {
+            if (helpMode)
+            {
+                std::cout << "Clear the window.\n";
+            }
+            else
+            {
+                system("CLS");
+            }
+        }
         else
         {
             std::cout << "The command \"" << action << "\" not exits!\n";

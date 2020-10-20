@@ -18,6 +18,7 @@ namespace VirtualComputer
 	print  - Show file
 	edit   - Edit file
 	echo   - Print text
+	clear  - Clear the window.
 
 )V0G0N";
 
