@@ -9,6 +9,15 @@
 namespace VirtualComputer::Commands
 {
     // commands help functions
+    static void HelpHelp()
+    {
+        std::cout
+            << "Show help information for commands.\n"
+            << "\n"
+            << "    help [command]\n"
+            << "        command - displays help information on that command.\n";
+    }
+    
     static void HelpDrives()
     {
         std::cout
@@ -25,8 +34,70 @@ namespace VirtualComputer::Commands
     }
 
     // commands functions
+    static void CommandDrives(std::string& command, std::vector<std::string>& commandParts)
+    {
+        if (commandParts.size() == 1 || !commandParts[1].compare("/s") || !commandParts[1].compare("/show")) // drives [/s | /show]
+        {
+            std::cout << "Drives exists:\n";
+            for (Drive* drive : Drive::s_Drives)
+            {
+                if (drive != nullptr)
+                {
+                    std::cout << "  " << drive->m_DriveName << ":\n";
+                }
+            }
+            std::cout << "\n";
+        }
+        else
+        {
+            if (!commandParts[1].compare("/c") || !commandParts[1].compare("/create")) // drives [/c | /create] [name]
+            {
+                if (commandParts.size() == 2)
+                {
+                    Drive* created = Drive::CreateDrive();
+                    if (created != nullptr)
+                    {
+                        std::cout << "The drive " << created->m_DriveName << ": created.\n";
+                    }
+                }
+                else if (commandParts.size() == 3)
+                {
+                    const char* name = commandParts[2].c_str();
+                    Drive* created = Drive::CreateDrive(name);
+                    if (created != nullptr)
+                    {
+                        std::cout << "The drive " << created->m_DriveName << ": created.\n";
+                    }
+                }
+                else
+                {
+                    HelpDrives();
+                }
+            }
+            else if (!commandParts[1].compare("/d") || !commandParts[1].compare("/delete")) // drives [/d | /delete] [name]
+            {
+                if (commandParts.size() == 3)
+                {
+                    const char* name = commandParts[2].c_str();
+                    char deleted = Drive::DeleteDrive(name);
+                    if (deleted != 0)
+                    {
+                        std::cout << "The drive " << deleted << ": deleted.\n";
+                    }
+                }
+                else
+                {
+                    HelpDrives();
+                }
+            }
+            else
+            {
+                HelpDrives();
+            }
+        }
+    }
 
-
+    // Do Command
     bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
         std::string_view action(commandParts[0]);
@@ -60,11 +131,7 @@ namespace VirtualComputer::Commands
         {
             if (helpMode)
             {
-                std::cout
-                    << "Show help information for commands.\n"
-                    << "\n"
-                    << "    help [command]\n"
-                    << "        command - displays help information on that command.\n";
+                HelpHelp();
             }
             else
             {
@@ -79,65 +146,7 @@ namespace VirtualComputer::Commands
             }
             else
             {
-                if (commandParts.size() == 1 || !commandParts[1].compare("/s") || !commandParts[1].compare("/show")) // drives [/s | /show]
-                {
-                    std::cout << "Drives exists:\n";
-                    for (Drive* drive : Drive::s_Drives)
-                    {
-                        if (drive != nullptr)
-                        {
-                            std::cout << "  " << drive->m_DriveName << ":\n";
-                        }
-                    }
-                    std::cout << "\n";
-                }
-                else
-                {
-                    if (!commandParts[1].compare("/c") || !commandParts[1].compare("/create")) // drives [/c | /create] [name]
-                    {
-                        if (commandParts.size() == 2)
-                        {
-                            Drive* created = Drive::CreateDrive();
-                            if (created != nullptr)
-                            {
-                                std::cout << "The drive " << created->m_DriveName << ": created.\n";
-                            }
-                        }
-                        else if (commandParts.size() == 3)
-                        {
-                            const char* name = commandParts[2].c_str();
-                            Drive* created = Drive::CreateDrive(name);
-                            if (created != nullptr)
-                            {
-                                std::cout << "The drive " << created->m_DriveName << ": created.\n";
-                            }
-                        }
-                        else
-                        {
-                            HelpDrives();
-                        }
-                    }
-                    else if (!commandParts[1].compare("/d") || !commandParts[1].compare("/delete")) // drives [/d | /delete] [name]
-                    {
-                        if (commandParts.size() == 3)
-                        {
-                            const char* name = commandParts[2].c_str();
-                            char deleted = Drive::DeleteDrive(name);
-                            if (deleted != 0)
-                            {
-                                std::cout << "The drive " << deleted << ": deleted.\n";
-                            }
-                        }
-                        else
-                        {
-                            HelpDrives();
-                        }
-                    }
-                    else
-                    {
-                        HelpDrives();
-                    }
-                }
+                CommandDrives(command, commandParts);
             }
         }
         else if (!action.compare("dir"))
