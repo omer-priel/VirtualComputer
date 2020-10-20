@@ -27,6 +27,10 @@ namespace Utils
 
 		static inline void Create(const std::string& path);
 
+		static bool Delete(const char* path);
+
+		static bool Delete(const std::string& path);
+
 		static void Resize(const char* path, const size_t& size);
 
 		static void Resize(const std::string& path, const size_t& size);
@@ -60,17 +64,17 @@ namespace Utils
 
 		explicit File(const std::string& path)
 		{
-			Open(path.c_str());
+			Open(path);
 		}
 
 		explicit File(const std::string& path, const bool createIfNeed)
 		{
-			Open(path.c_str(), createIfNeed);
+			Open(path, createIfNeed);
 		}
 
 		explicit File(const std::string& path, const bool createIfNeed, bool& isCreatedNow)
 		{
-			Open(path.c_str(), createIfNeed, isCreatedNow);
+			Open(path, createIfNeed, isCreatedNow);
 		}
 
 		virtual ~File()
@@ -85,7 +89,7 @@ namespace Utils
 
 		void Open(const char* path, bool const createIfNeed, bool& isCreatedNow);
 
-		inline void Open(const std::string& path, const bool createIfNeed = false);
+		void Open(const std::string& path, const bool createIfNeed = false);
 
 		inline void Open(const std::string& path, const bool createIfNeed, bool& isCreatedNow);
 

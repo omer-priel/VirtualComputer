@@ -15,7 +15,11 @@ namespace VirtualComputer::Commands
             << "Mange the Drives.\n"
             << "\n"
             << "    drives [/s | /show] - Show the drives.\n"
+            
             << "    drives [/c | /create] - Create new drive.\n"
+            << "    drives [/c | /create] [name] - Create new drive.\n"
+            << "        name - Drive name\n"
+
             << "    drives [/d | /delete] [name] - Delete drive.\n"
             << "        name - Drive name\n";
     }
@@ -89,20 +93,44 @@ namespace VirtualComputer::Commands
                 }
                 else
                 {
-                    if (commandParts.size() == 2 && (!commandParts[1].compare("/c") || !commandParts[1].compare("/create"))) // drives [/c | /create]
+                    if (!commandParts[1].compare("/c") || !commandParts[1].compare("/create")) // drives [/c | /create] [name]
                     {
-                        Drive* created = Drive::CreateDrive();
-                        if (created != nullptr)
+                        if (commandParts.size() == 2)
                         {
-                            std::cout << "The drive " << created->m_DriveName << ": created.\n";
+                            Drive* created = Drive::CreateDrive();
+                            if (created != nullptr)
+                            {
+                                std::cout << "The drive " << created->m_DriveName << ": created.\n";
+                            }
+                        }
+                        else if (commandParts.size() == 3)
+                        {
+                            const char* name = commandParts[2].c_str();
+                            Drive* created = Drive::CreateDrive(name);
+                            if (created != nullptr)
+                            {
+                                std::cout << "The drive " << created->m_DriveName << ": created.\n";
+                            }
+                        }
+                        else
+                        {
+                            HelpDrives();
                         }
                     }
-                    else if (commandParts.size() == 3 && (!commandParts[1].compare("/d") || !commandParts[1].compare("/delete"))) // drives [/d | /delete] [name]
+                    else if (!commandParts[1].compare("/d") || !commandParts[1].compare("/delete")) // drives [/d | /delete] [name]
                     {
-                        char deleted = Drive::DeleteDrive(commandParts[2].c_str());
-                        if (deleted != 0)
+                        if (commandParts.size() == 3)
                         {
-                            std::cout << "The drive " << deleted << ": deleted.\n";
+                            const char* name = commandParts[2].c_str();
+                            char deleted = Drive::DeleteDrive(name);
+                            if (deleted != 0)
+                            {
+                                std::cout << "The drive " << deleted << ": deleted.\n";
+                            }
+                        }
+                        else
+                        {
+                            HelpDrives();
                         }
                     }
                     else
@@ -160,7 +188,7 @@ namespace VirtualComputer::Commands
         {
             if (helpMode)
             {
-                // Need Code
+                std::cout << "Displays messages.\n";
             }
             else
             {

@@ -26,7 +26,17 @@ namespace Utils
 
 	inline void File::Create(const std::string& path)
 	{
-		File::Create(path);
+		File::Create(path.c_str());
+	}
+
+	bool File::Delete(const char* path)
+	{
+		return remove(path) == 0;
+	}
+
+	bool File::Delete(const std::string& path)
+	{
+		return remove(path.c_str()) == 0;
 	}
 
 	void File::Resize(const char* path, const size_t& size)
@@ -48,6 +58,7 @@ namespace Utils
 		}
 
 		m_Stream.open(path, std::ios::in | std::ios::out | std::ios::binary);
+		m_IndexChanged = true;
 	}
 
 	void File::Open(const char* path, bool const createIfNeed, bool& isCreatedNow)
@@ -63,31 +74,17 @@ namespace Utils
 		}
 
 		m_Stream.open(path, std::ios::in | std::ios::out | std::ios::binary);
+		m_IndexChanged = true;
 	}
 
-	inline void File::Open(const std::string& path, const bool createIfNeed)
+	void File::Open(const std::string& path, const bool createIfNeed)
 	{
-		if (createIfNeed && !Exists(path))
-		{
-			Create(path);
-		}
-
-		m_Stream.open(path, std::ios::in | std::ios::out | std::ios::binary);
+		Open(path.c_str(), createIfNeed);
 	}
 
 	inline void File::Open(const std::string& path, const bool createIfNeed, bool& isCreatedNow)
 	{
-		if (createIfNeed && !Exists(path))
-		{
-			isCreatedNow = true;
-			Create(path);
-		}
-		else
-		{
-			isCreatedNow = false;
-		}
-
-		m_Stream.open(path, std::ios::in | std::ios::out | std::ios::binary);
+		Open(path.c_str(), createIfNeed, isCreatedNow);
 	}
 
 	// Actions

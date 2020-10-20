@@ -2,6 +2,7 @@
 #include "Drive.h"
 
 #include "Utils/Directory.h"
+#include "Utils/File.h"
 
 #include "DirectoryBody.h"
 #include "Directory.h"
@@ -60,18 +61,39 @@ namespace VirtualComputer
         }
     }
 
-    Drive* Drive::CreateDrive()
+    Drive* Drive::CreateDrive(const char* name)
     {
-        if (s_DrivesActives == MAX_DRIVES)
-        {
-            std::cout << "Can't create more the " << MAX_DRIVES << " drives.\n";
-            return nullptr;
-        }
+        int index;
 
-        int index = 0;
-        while (s_Drives[index] != nullptr)
+        if (name == nullptr)
         {
-            index++;
+            if (s_DrivesActives == MAX_DRIVES)
+            {
+                std::cout << "Can't create more the " << MAX_DRIVES << " drives.\n";
+                return nullptr;
+            }
+
+            index = 0;
+            while (s_Drives[index] != nullptr)
+            {
+                index++;
+            }
+        }
+        else
+        {
+            index = DriveNameToIndex(name);
+
+            if (index == -1)
+            {
+                std::cout << "Drive name syntex error!\n";
+                return nullptr;
+            }
+
+            if (Drive::s_Drives[index] != nullptr)
+            {
+                std::cout << "The drive exists!\n";
+                return nullptr;
+            }
         }
 
         std::string drivePath = DIVERS_PATH;
@@ -116,7 +138,7 @@ namespace VirtualComputer
 
         if (drive == nullptr)
         {
-            std::cout << "the drive not exists!\n";
+            std::cout << "The drive not exists!\n";
             return 0;
         }
 
@@ -126,7 +148,21 @@ namespace VirtualComputer
             return 0;
         }
 
-        // need code - need Utils::File::Delete function
+        drive->m_FileStream.Close();
+
+        if (Utils::File::Delete(drive->m_DrivePath.c_str()))
+        {
+            delete drive;
+            Drive::s_Drives[index] = nullptr;
+            s_DrivesActives--;
+        }
+        else
+        {
+            drive->m_FileStream.Open(drive->m_DrivePath);
+
+            std::cout << "Can't delete the real file of the drive!\n";
+            return 0;
+        }
 
         return ('A' + index);
     }

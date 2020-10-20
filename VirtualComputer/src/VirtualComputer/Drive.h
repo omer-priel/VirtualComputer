@@ -27,7 +27,7 @@ namespace VirtualComputer
 
 		static void LoadDrives(bool& haveError);
 
-		static Drive* CreateDrive();
+		static Drive* CreateDrive(const char* name = nullptr);
 		static char DeleteDrive(const char* name);
 
 		static char DriveNameToIndex(const char* name);
