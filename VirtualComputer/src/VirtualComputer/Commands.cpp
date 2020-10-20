@@ -5,6 +5,81 @@
 
 #include "HelpBody.h"
 #include "Drive.h"
+#include "Directory.h"
+#include "File.h"
+
+namespace VirtualComputer::User
+{
+    static char s_StartLine[MAX_COMMAND_SIZE - 2];
+
+    static struct CurrentDirectory
+    {
+        Drive* Drive = nullptr;
+        Directory* Directory = nullptr;
+
+        void Change(VirtualComputer::Drive* drive)
+        {
+            Drive = drive;
+            Directory = nullptr;
+        }
+
+        void Change(VirtualComputer::Directory* directory)
+        {
+            Drive = nullptr;
+            Directory = directory;
+        }
+        
+        bool IsDrive() const
+        {
+            return Drive != nullptr;
+        }
+
+        bool IsDirectory() const
+        {
+            return Directory != nullptr;
+        }
+
+        DirectoryBody* GetBody() const
+        {
+            if (IsDrive())
+            {
+                return Drive;
+            }
+            else
+            {
+                return Directory;
+            }
+        }
+    }
+    s_CurrentDirectory;
+
+    static void ChangeStartLine(const std::string& line)
+    {
+        memcpy(s_StartLine, line.c_str(), line.size());
+        s_StartLine[line.size()] = 0;
+    }
+
+    static void GetCommand(std::string& command)
+    {
+        std::cout << s_StartLine << "> ";
+        std::getline(std::cin, command);
+    }
+
+    static EntityName CreateName(const char* name)
+    {
+        EntityName ret;
+        ret.fill(0);
+        for (size_t i = 0; i < MAX_ENTITY_NAME; i++)
+        {
+            ret[i] = name[i];
+            if (name[i] == 0)
+                break;
+        }
+
+        ret[MAX_ENTITY_NAME] = 0;
+        return ret;
+    }
+}
 
 namespace VirtualComputer::Commands
 {
@@ -31,6 +106,16 @@ namespace VirtualComputer::Commands
 
             << "    drives [/d | /delete] [name] - Delete drive.\n"
             << "        name - Drive name\n";
+    }
+
+    static void HelpDir()
+    {
+        std::cout
+            << "Displays a list of files and subdirectories in a directory.\n"
+            << "\n"
+            << "    dir - Displays current directory.\n"
+            << "    dir [path] - Displays directory by path.\n"
+            << "        path - Path of directory\n";
     }
 
     // commands functions
@@ -97,7 +182,198 @@ namespace VirtualComputer::Commands
         }
     }
 
-    // Do Command
+    static void CommandDir(std::string& command, std::vector<std::string>& commandParts)
+    {
+        if (commandParts.size() <= 2)
+        {
+            DirectoryBody* directory;
+            Drive* drive = Drive::s_DriveCurrent;
+
+            if (commandParts.size() == 1)
+            {
+                directory = User::s_CurrentDirectory.GetBody();
+            }
+            else
+            {
+                std::string_view path = commandParts[1];
+
+                // Get DirectoryBody* by path
+                // TODO
+                // for Dubeg
+                directory = User::s_CurrentDirectory.GetBody();
+            }
+
+            std::string directories[MAX_DIRECTORIES];
+            for (size_t i = 0; i < MAX_DIRECTORIES; i++)
+            {
+                directories[i] = directory->m_DirectoriesNames[i].GetName(drive->m_FileStream);
+            }
+
+            std::string files[MAX_FILES];
+            for (size_t i = 0; i < MAX_FILES; i++)
+            {
+                files[i] = directory->m_FilesNames[i].GetName(drive->m_FileStream);
+            }
+
+            std::sort(directories, directories + MAX_DIRECTORIES);
+            std::sort(files, files + MAX_FILES);
+
+            int directoriesIndex = 0;
+            int filesIndex = 0;
+
+            do
+            {
+                while (directoriesIndex < MAX_DIRECTORIES && directories[directoriesIndex].empty())
+                {
+                    directoriesIndex++;
+                }
+
+                while (filesIndex < MAX_DIRECTORIES && files[filesIndex].empty())
+                {
+                    filesIndex++;
+                }
+
+                if (directoriesIndex < MAX_DIRECTORIES && filesIndex < MAX_FILES)
+                {
+                    std::string a = directories[directoriesIndex];
+                    std::string b = files[filesIndex];
+
+                    if (directories[directoriesIndex].compare(files[filesIndex]) < 0)
+                    {
+                        std::cout << "\t<DIR> \t" << directories[directoriesIndex] << "\n";
+                        directoriesIndex++;
+                    }
+                    else
+                    {
+                        std::cout << "\t<FILE>\t" << files[filesIndex] << "\n";
+                        filesIndex++;
+                    }
+                }
+                else if (directoriesIndex < MAX_DIRECTORIES)
+                {
+                    std::cout << "\t<DIR> \t" << directories[directoriesIndex] << "\n";
+                    directoriesIndex++;
+                }
+                else if (filesIndex < MAX_FILES)
+                {
+                    std::cout << "\t<FILE>\t" << files[filesIndex] << "\n";
+                    filesIndex++;
+                }
+                else
+                {
+                    break;
+                }
+
+            } while (true);
+        }
+        else
+        {
+            HelpDir();
+        }
+    }
+
+    // Public Functions
+    void Load()
+    {
+        User::s_CurrentDirectory.Change(Drive::s_DriveCurrent);
+
+        std::string firstLine("A:\\");
+        firstLine[0] = Drive::s_DriveCurrent->m_DriveName;
+        User::ChangeStartLine(firstLine);
+    }
+
+    void Loop()
+    {
+        bool running = true;
+        while (running)
+        {
+            // Get Command
+            std::string command;
+            User::GetCommand(command);
+
+            // do
+            if (command.size() > MAX_COMMAND_SIZE)
+            {
+                Logger::Error("The cammand can't be bigger then ", MAX_COMMAND_SIZE, "!");
+                continue;
+            }
+
+            std::vector<std::string> commandParts;
+
+            char commandPart[MAX_COMMAND_SIZE];
+            int partIndex = 0;
+            bool inString = false;
+
+            for (char tv : command)
+            {
+                if (inString)
+                {
+                    if (tv == '\"')
+                    {
+                        inString = false;
+                    }
+                    else
+                    {
+                        commandPart[partIndex] = tv;
+                        partIndex++;
+                    }
+                }
+                else
+                {
+                    if (tv == '\"')
+                    {
+                        inString = true;
+                    }
+                    else if (tv == ' ' || tv == '\t')
+                    {
+                        if (partIndex == 0)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            commandPart[partIndex] = 0;
+                            commandParts.emplace_back(commandPart);
+
+                            partIndex = 0;
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        commandPart[partIndex] = tv;
+                        partIndex++;
+                    }
+                }
+            }
+
+            if (inString)
+            {
+                Logger::Error("Command syntex error!");
+                continue;
+            }
+
+            if (partIndex != 0)
+            {
+                commandPart[partIndex] = 0;
+                commandParts.emplace_back(commandPart);
+            }
+
+            if (commandParts.empty())
+            {
+                continue;
+            }
+
+            // make command lower ("ECHO" to "echo")
+            for (auto& tv : commandParts[0])
+            {
+                tv = std::tolower(tv);
+            }
+
+            running = Commands::DoCommand(command, commandParts);
+        }
+    }
+
     bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
         std::string_view action(commandParts[0]);
@@ -151,7 +427,14 @@ namespace VirtualComputer::Commands
         }
         else if (!action.compare("dir"))
         {
-
+            if (helpMode)
+            {
+                HelpDir();
+            }
+            else
+            {
+                CommandDir(command, commandParts);
+            }
         }
         else if (!action.compare("md"))
         {
