@@ -38,7 +38,10 @@ unsigned int Directory::CreateDirectory(const EntityName& name)
         return 0;
     }
 
-    // Can't be name - need code
+    if (!Drive::CheakEntityName(name))
+    {
+        return false;
+    }
 
     for (unsigned char i = 0; i < m_DirectoriesCount; i++)
     {
@@ -163,7 +166,10 @@ unsigned int Directory::CreateFile(const EntityName& name, unsigned int size)
         return 0;
     }
 
-    // Can't be name - need code
+    if (!Drive::CheakEntityName(name))
+    {
+        return false;
+    }
 
     for (unsigned char i = 0; i < m_DirectoriesCount; i++)
     {

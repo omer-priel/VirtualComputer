@@ -29,6 +29,8 @@ public:
 
 	static constexpr size_t ChankToFileIndex(const unsigned int& chankIndex);
 
+	static bool CheakEntityName(const EntityName& name);
+
 	// None-Static
 private:
 	std::string m_DrivePath;

@@ -106,6 +106,30 @@ constexpr size_t Drive::ChankToFileIndex(const unsigned int& chankIndex)
     return (CHANK_SIZE * chankIndex) - MAX_ENTITY_NAME;
 }
 
+bool Drive::CheakEntityName(const EntityName& name)
+{
+    if (name.empty())
+    {
+        Logger::Error("The entity name can't be empty!"); // fix: entity need be directory or file.
+        return false;
+    }
+
+    for (char tv : name)
+    {
+        if (tv == 0)
+        {
+            break;
+        }
+        if (tv == '.' || tv == ':' || tv == '\\' || tv == '\'' || tv == '\"' || tv == '\n')
+        {
+            Logger::Error("The tv \'", tv, "\' can't be in entity name!"); // fix: entity need be directory or file.
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // None-Static
 void Drive::GoToChank(unsigned int chankIndex, size_t indexInTheChank)
 {
@@ -234,7 +258,10 @@ unsigned int Drive::CreateDirectory(const EntityName& name)
         return 0;
     }
 
-    // Can't be name - need code
+    if (!Drive::CheakEntityName(name))
+    {
+        return false;
+    }
 
     for (unsigned char i = 0; i < m_DirectoriesCount; i++)
     {
@@ -330,7 +357,10 @@ unsigned int Drive::CreateFile(const EntityName& name, unsigned int size)
         return 0;
     }
 
-    // Can't be name - need code
+    if (!Drive::CheakEntityName(name))
+    {
+        return false;
+    }
 
     for (unsigned char i = 0; i < m_DirectoriesCount; i++)
     {
