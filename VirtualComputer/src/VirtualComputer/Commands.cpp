@@ -505,10 +505,10 @@ namespace VirtualComputer::Commands
         }
         else
         {
-            std::cout << "The command \"" << action << "\" not exits!\n";
+            std::cout << "The command \"" << action << "\" not exits!";
             Help();
         }
-        
+
         return true;
     }
 
