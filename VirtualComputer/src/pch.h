@@ -25,7 +25,10 @@
 #include "Utils/Debug/DebugTimer.h"
 
 // using
-using Logger = Utils::Debug::Logger;
-using DebugTimer = Utils::Debug::DebugTimer; 
-using Chank = std::array<char, CHANK_SIZE>;
-using EntityName = std::array<char, MAX_ENTITY_NAME + 1>;
+namespace VirtualComputer
+{
+	using Logger = Utils::Debug::Logger;
+	using DebugTimer = Utils::Debug::DebugTimer;
+	using Chank = std::array<char, CHANK_SIZE>;
+	using EntityName = std::array<char, MAX_ENTITY_NAME + 1>;
+}

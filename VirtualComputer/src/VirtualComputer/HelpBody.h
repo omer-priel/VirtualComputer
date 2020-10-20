@@ -1,6 +1,8 @@
 #pragma once
 
-const char* s_HelpBody = R"V0G0N(
+namespace VirtualComputer
+{
+	const char* s_HelpBody = R"V0G0N(
 	exit   - Exit the program
 	help   - Show all the commands
 	drives - Show drives list
@@ -19,7 +21,8 @@ const char* s_HelpBody = R"V0G0N(
 
 )V0G0N";
 
-char* HelpBody()
-{
-	return (char*)(s_HelpBody + 1);
+	char* HelpBody()
+	{
+		return (char*)(s_HelpBody + 1);
+	}
 }

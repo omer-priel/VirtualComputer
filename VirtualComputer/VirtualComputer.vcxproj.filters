@@ -1,25 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\pch.cpp" />
-    <ClCompile Include="src\Drive.cpp" />
-    <ClCompile Include="src\Directory.cpp" />
-    <ClCompile Include="src\DirectoryBody.cpp" />
-    <ClCompile Include="src\MemoryEntity.cpp" />
-    <ClCompile Include="src\SmartEntityName.cpp" />
-    <ClCompile Include="src\File.cpp" />
-    <ClCompile Include="src\Commands.cpp" />
+    <ClCompile Include="src\VirtualComputer\Commands.cpp" />
+    <ClCompile Include="src\VirtualComputer\Directory.cpp" />
+    <ClCompile Include="src\VirtualComputer\DirectoryBody.cpp" />
+    <ClCompile Include="src\VirtualComputer\Drive.cpp" />
+    <ClCompile Include="src\VirtualComputer\File.cpp" />
+    <ClCompile Include="src\VirtualComputer\main.cpp" />
+    <ClCompile Include="src\VirtualComputer\MemoryEntity.cpp" />
+    <ClCompile Include="src\VirtualComputer\SmartEntityName.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h" />
-    <ClInclude Include="src\Drive.h" />
-    <ClInclude Include="src\DirectoryBody.h" />
-    <ClInclude Include="src\MemoryEntity.h" />
-    <ClInclude Include="src\Directory.h" />
-    <ClInclude Include="src\SmartEntityName.h" />
-    <ClInclude Include="src\File.h" />
-    <ClInclude Include="src\HelpBody.h" />
-    <ClInclude Include="src\Commands.h" />
+    <ClInclude Include="src\VirtualComputer\SmartEntityName.h" />
+    <ClInclude Include="src\VirtualComputer\Commands.h" />
+    <ClInclude Include="src\VirtualComputer\Directory.h" />
+    <ClInclude Include="src\VirtualComputer\DirectoryBody.h" />
+    <ClInclude Include="src\VirtualComputer\Drive.h" />
+    <ClInclude Include="src\VirtualComputer\File.h" />
+    <ClInclude Include="src\VirtualComputer\HelpBody.h" />
+    <ClInclude Include="src\VirtualComputer\MemoryEntity.h" />
   </ItemGroup>
 </Project>

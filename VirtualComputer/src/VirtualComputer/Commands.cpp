@@ -6,15 +6,24 @@
 #include "HelpBody.h"
 #include "Drive.h"
 
-namespace Commands
+namespace VirtualComputer::Commands
 {
     bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
         std::string_view action(commandParts[0]);
-        bool helpMode = !action.compare("help") && commandParts.size() > 1;
-        if (helpMode)
+        
+        bool helpMode = false;
+        if (commandParts.size() > 1)
         {
-            action = std::string_view(commandParts[1]);
+            if (!commandParts[1].compare("/?")) // [command] /?
+            {
+                helpMode = true;
+            }
+            else if (!action.compare("help")) // help [command]
+            {
+                action = std::string_view(commandParts[1]);
+                helpMode = true;
+            }   
         }
 
         if (!action.compare("exit"))

@@ -1,5 +1,5 @@
 #pragma once
-namespace Commands
+namespace VirtualComputer::Commands
 {
 	bool DoCommand(std::string& command, std::vector<std::string>& commandParts);
 
