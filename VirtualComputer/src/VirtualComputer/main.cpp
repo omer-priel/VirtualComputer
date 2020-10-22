@@ -29,6 +29,7 @@ int main()
     Commands::Loop();
 
     // Close Compuer
+    Commands::Close();
     for (Drive* drive : Drive::s_Drives)
     {
         if (drive != nullptr)

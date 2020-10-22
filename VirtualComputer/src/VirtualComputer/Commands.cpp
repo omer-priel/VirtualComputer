@@ -374,6 +374,11 @@ namespace VirtualComputer::Commands
         }
     }
 
+    void Close()
+    {
+        delete User::s_CurrentDirectory.Directory;
+    }
+
     bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
         std::string_view action(commandParts[0]);
