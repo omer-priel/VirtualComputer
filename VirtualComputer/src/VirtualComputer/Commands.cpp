@@ -139,8 +139,6 @@ namespace VirtualComputer::Commands
             chankIndex = User::s_CurrentDirectory.GetBody()->m_ChankIndex;
         }
 
-        Logger::Debug(drive->m_DriveName, ":");
-
         unsigned int startNameIndex = i;
         while (i < path.size())
         {
@@ -169,7 +167,6 @@ namespace VirtualComputer::Commands
                 if (!name.compare("."))
                 {
                     // Do nothing
-                    Logger::Debug("<.>");
                 }
                 else if (!name.compare(".."))
                 {
@@ -189,7 +186,6 @@ namespace VirtualComputer::Commands
                         {
                             chankIndex = pathInChanks[pathInChanks.size() - 1];
                         }
-                        Logger::Debug("<..>");
                     }
                 }
                 else
@@ -205,30 +201,23 @@ namespace VirtualComputer::Commands
                     }
 
                     unsigned char count = drive->m_FileStream.Read<unsigned char>();
-                    unsigned int j = 0;
 
                     bool found = false;
-                    while (j < MAX_DIRECTORIES && count != 0)
+                    for (unsigned char j = 0; j < count; j++)
                     {
                         chankIndex = drive->m_FileStream.Read<unsigned int>();
-                        if (chankIndex != 0)
+                        size_t index = drive->m_FileStream.GetIndex();
+                        drive->GoToChank(chankIndex);
+
+                        char* checkName = SmartEntityName().GetName(drive->m_FileStream);
+                        found = SmartEntityName::IsEqual(path.c_str() + startNameIndex, checkName, name.size(), strlen(checkName));
+
+                        if (found)
                         {
-                            size_t index = drive->m_FileStream.GetIndex();
-                            drive->GoToChank(chankIndex);
-
-                            char* checkName = SmartEntityName().GetName(drive->m_FileStream);
-                            found = SmartEntityName::IsEqual(path.c_str() + startNameIndex, checkName, name.size(), strlen(checkName));
-
-                            if (found)
-                            {
-                                Logger::Debug(checkName);
-                                break;
-                            }
-
-                            drive->m_FileStream.ChangeIndex(index);
-                            count--;
+                            break;
                         }
-                        j++;
+
+                        drive->m_FileStream.ChangeIndex(index);
                     }
 
                     if (found)
@@ -253,8 +242,6 @@ namespace VirtualComputer::Commands
                 i++;
             }
         }
-
-        Logger::Debug("Good");
 
         return true;
     }
@@ -368,7 +355,7 @@ namespace VirtualComputer::Commands
     {
         if (commandParts.size() <= 2)
         {
-            DirectoryBody* directory;
+            DirectoryBody* directory = nullptr;
             Drive* drive = Drive::s_DriveCurrent;
 
             if (commandParts.size() == 1)
@@ -398,57 +385,48 @@ namespace VirtualComputer::Commands
             }
 
             std::string directories[MAX_DIRECTORIES];
-            for (size_t i = 0; i < MAX_DIRECTORIES; i++)
+            for (size_t i = 0; i < directory->m_DirectoriesCount; i++)
             {
                 directories[i] = directory->m_DirectoriesNames[i].GetName();
             }
 
             std::string files[MAX_FILES];
-            for (size_t i = 0; i < MAX_FILES; i++)
+            for (size_t i = 0; i < directory->m_FilesCount; i++)
             {
                 files[i] = directory->m_FilesNames[i].GetName();
             }
 
-            std::sort(directories, directories + MAX_DIRECTORIES);
-            std::sort(files, files + MAX_FILES);
+            std::sort(directories, directories + directory->m_DirectoriesCount);
+            std::sort(files, files + directory->m_FilesCount);
 
-            int directoriesIndex = MAX_DIRECTORIES - directory->m_DirectoriesCount;
-            int filesIndex = MAX_FILES - directory->m_FilesCount;
+            int directoriesIndex = 0;
+            int filesIndex = 0;
 
-            do
+            while (directoriesIndex < directory->m_DirectoriesCount && filesIndex < directory->m_FilesCount)
             {
-                if (directoriesIndex < MAX_DIRECTORIES && filesIndex < MAX_FILES)
-                {
-                    std::string a = directories[directoriesIndex];
-                    std::string b = files[filesIndex];
-
-                    if (directories[directoriesIndex].compare(files[filesIndex]) < 0)
-                    {
-                        std::cout << "\t<DIR> \t" << directories[directoriesIndex] << "\n";
-                        directoriesIndex++;
-                    }
-                    else
-                    {
-                        std::cout << "\t<FILE>\t" << files[filesIndex] << "\n";
-                        filesIndex++;
-                    }
-                }
-                else if (directoriesIndex < MAX_DIRECTORIES)
+                if (directories[directoriesIndex].compare(files[filesIndex]) < 0)
                 {
                     std::cout << "\t<DIR> \t" << directories[directoriesIndex] << "\n";
                     directoriesIndex++;
                 }
-                else if (filesIndex < MAX_FILES)
+                else
                 {
                     std::cout << "\t<FILE>\t" << files[filesIndex] << "\n";
                     filesIndex++;
                 }
-                else
-                {
-                    break;
-                }
+            }
 
-            } while (true);
+            while (directoriesIndex < directory->m_DirectoriesCount)
+            {
+                std::cout << "\t<DIR> \t" << directories[directoriesIndex] << "\n";
+                directoriesIndex++;
+            }
+            
+            while (directoriesIndex < directory->m_DirectoriesCount)
+            {
+                std::cout << "\t<FILE>\t" << files[filesIndex] << "\n";
+                filesIndex++;
+            }
         }
         else
         {
@@ -525,7 +503,6 @@ namespace VirtualComputer::Commands
             drive->CreateDirectory(User::CreateName("a c"));
             drive->CreateFile(User::CreateName("a c.txt"), 0);
 
-            /*
             drive->CreateDirectory(User::CreateName("bcc"));
             drive->CreateFile(User::CreateName("bcc.txt"), 0);
             
@@ -547,7 +524,6 @@ namespace VirtualComputer::Commands
 
             directory->CreateDirectory(User::CreateName("b b1"));
             directory->CreateFile(User::CreateName("b b1.zip"), 0);
-            */
         }
         else if (!action.compare("rd"))
         {
