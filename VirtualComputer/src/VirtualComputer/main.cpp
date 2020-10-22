@@ -28,5 +28,14 @@ int main()
     // Start Runing
     Commands::Loop();
 
+    // Close Compuer
+    for (Drive* drive : Drive::s_Drives)
+    {
+        if (drive != nullptr)
+        {
+            delete drive;
+        }
+    }
+
     Utils::Debug::DebugTrace::EndSession();
 }

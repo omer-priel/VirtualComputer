@@ -43,6 +43,14 @@ namespace VirtualComputer
 			LoadBody();
 		}
 
+		~File()
+		{
+			for (auto ptr : m_BodyChanks)
+			{
+				delete ptr;
+			}
+		}
+
 		void LoadBody();
 	};
 }

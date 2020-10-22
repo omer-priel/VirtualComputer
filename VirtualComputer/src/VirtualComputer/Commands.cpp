@@ -389,7 +389,7 @@ namespace VirtualComputer::Commands
             {
                 action = std::string_view(commandParts[1]);
                 helpMode = true;
-            }   
+            }
         }
 
         if (!action.compare("exit"))
