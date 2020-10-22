@@ -11,18 +11,65 @@
 
 namespace VirtualComputer::User
 {
-    static char s_StartLine[MAX_COMMAND_SIZE - 2];
+    static char s_StartLine[MAX_COMMAND_SIZE - 10];
 
     static struct CurrentDirectory
     {
         Directory* directory = nullptr;
-        std::vector<unsigned int> path;
+        std::vector<PathItem> path;
 
-        void Change(VirtualComputer::Drive* drive)
+        void Change()
         {
-            Drive::s_DriveCurrent = drive;
-            path.clear();
-            directory = nullptr;
+            s_StartLine[0] = Drive::s_DriveCurrent->m_DriveName;
+            s_StartLine[1] = ':';
+            s_StartLine[2] = '\\';
+            s_StartLine[3] = 0;
+        }
+
+        void Change(Drive* drive, unsigned int chankIndex, std::vector<PathItem>* pathInChanks)
+        {            
+            if (Drive::s_DriveCurrent != drive || chankIndex != GetBody()->m_ChankIndex)
+            {
+                Drive::s_DriveCurrent = drive;
+                delete directory;
+                if (chankIndex == 0)
+                {
+                    path.clear();
+                    directory = nullptr;
+                }
+                else
+                {
+                    path.clear();
+                    for (PathItem& chankIndex : *pathInChanks)
+                    {
+                        path.push_back(chankIndex);
+                    }
+                    directory = new Directory(chankIndex, drive);
+                }
+
+                s_StartLine[0] = drive->m_DriveName;
+                s_StartLine[1] = ':';
+                s_StartLine[2] = '\\';
+                size_t i = 3;
+                for (auto& item : path)
+                {
+                    if (i + item.m_Name.size() < MAX_COMMAND_SIZE - 12)
+                    {
+                        memcpy(s_StartLine + i, &item.m_Name[0], item.m_Name.size());
+                        i += item.m_Name.size();
+                        s_StartLine[i] = '\\';
+                        i++;
+                    }
+                    else
+                    {
+                        memcpy(s_StartLine + i, &item.m_Name[0], 10);
+                        i += 10;
+                        s_StartLine[i] = '\\';
+                        break;
+                    }
+                }
+                s_StartLine[i] = 0;
+            }
         }
         
         bool IsDrive() const
@@ -49,12 +96,6 @@ namespace VirtualComputer::User
     }
     s_CurrentDirectory;
 
-    static void ChangeStartLine(const std::string& line)
-    {
-        memcpy(s_StartLine, line.c_str(), line.size());
-        s_StartLine[line.size()] = 0;
-    }
-
     static void GetCommand(std::string& command)
     {
         std::cout << s_StartLine << "> ";
@@ -80,7 +121,7 @@ namespace VirtualComputer::User
 namespace VirtualComputer::Commands
 {
     // Utils functions
-    static bool GetDirectory(std::string& path, Drive*& drive, unsigned int& chankIndex)
+    static bool GetDirectory(std::string& path, Drive*& drive, unsigned int& chankIndex, std::vector<PathItem>& pathInChanks)
     {
         drive = nullptr;
         chankIndex = 0;
@@ -125,13 +166,12 @@ namespace VirtualComputer::Commands
         }
 
         std::string_view pathView(path);
-        std::vector<unsigned int> pathInChanks;
 
         if (drive == nullptr) // Start from current directory
         {
             drive = Drive::s_DriveCurrent;
             
-            for (auto item : User::s_CurrentDirectory.path)
+            for (PathItem& item : User::s_CurrentDirectory.path)
             {
                 pathInChanks.push_back(item);
             }
@@ -184,7 +224,7 @@ namespace VirtualComputer::Commands
                         }
                         else
                         {
-                            chankIndex = pathInChanks[pathInChanks.size() - 1];
+                            chankIndex = pathInChanks[pathInChanks.size() - 1].m_chankIndex;
                         }
                     }
                 }
@@ -214,17 +254,14 @@ namespace VirtualComputer::Commands
 
                         if (found)
                         {
+                            pathInChanks.emplace_back(chankIndex, checkName);
                             break;
                         }
 
                         drive->m_FileStream.ChangeIndex(index);
                     }
 
-                    if (found)
-                    {
-                        pathInChanks.push_back(chankIndex);
-                    }
-                    else
+                    if (!found)
                     {
                         return false;
                     }
@@ -244,6 +281,12 @@ namespace VirtualComputer::Commands
         }
 
         return true;
+    }
+
+    static bool GetDirectory(std::string& path, Drive*& drive, unsigned int& chankIndex)
+    {
+        std::vector<PathItem> pathInChanks;
+        return GetDirectory(path, drive, chankIndex, pathInChanks);
     }
 
     // help
@@ -284,6 +327,15 @@ namespace VirtualComputer::Commands
             << "\n"
             << "    dir - Displays current directory.\n"
             << "    dir [path] - Displays directory by path.\n"
+            << "        path - Path of directory\n";
+    }
+
+    static void HelpCd()
+    {
+        std::cout
+            << "Changes current directory.\n"
+            << "\n"
+            << "    dir [path] - Changes current directory.\n"
             << "        path - Path of directory\n";
     }
 
@@ -365,7 +417,6 @@ namespace VirtualComputer::Commands
             else
             {
                 unsigned int chankIndex;
-
                 if (GetDirectory(commandParts[1], drive, chankIndex))
                 {
                     if (chankIndex == 0)
@@ -436,6 +487,28 @@ namespace VirtualComputer::Commands
         else
         {
             HelpDir();
+        }
+    }
+
+    static void CommandCd(std::string& command, std::vector<std::string>& commandParts)
+    {
+        if (commandParts.size() == 2)
+        {
+            Drive* drive;
+            unsigned int chankIndex;
+            std::vector<PathItem> pathInChanks;
+            if (GetDirectory(commandParts[1], drive, chankIndex, pathInChanks))
+            {
+                User::s_CurrentDirectory.Change(drive, chankIndex, &pathInChanks);
+            }
+            else
+            {
+                HelpCd();
+            }
+        }
+        else
+        {
+            HelpCd();
         }
     }
 
@@ -536,7 +609,14 @@ namespace VirtualComputer::Commands
         }
         else if (!action.compare("cd"))
         {
-
+            if (helpMode)
+            {
+                HelpCd();
+            }
+            else
+            {
+                CommandCd(command, commandParts);
+            }
         }
         else if (!action.compare("mf"))
         {
@@ -605,11 +685,7 @@ namespace VirtualComputer::Commands
     // Public Functions
     void Load()
     {
-        User::s_CurrentDirectory.Change(Drive::s_DriveCurrent);
-
-        std::string firstLine("A:\\");
-        firstLine[0] = Drive::s_DriveCurrent->m_DriveName;
-        User::ChangeStartLine(firstLine);
+        User::s_CurrentDirectory.Change();
     }
 
     void Loop()
