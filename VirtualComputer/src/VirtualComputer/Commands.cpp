@@ -2,6 +2,7 @@
 #include "Commands.h"
 
 #include <unordered_map>
+#include <string_view>
 
 #include "HelpBody.h"
 #include "Drive.h"
@@ -14,40 +15,35 @@ namespace VirtualComputer::User
 
     static struct CurrentDirectory
     {
-        Drive* Drive = nullptr;
-        Directory* Directory = nullptr;
+        Directory* directory = nullptr;
+        std::vector<unsigned int> path;
 
         void Change(VirtualComputer::Drive* drive)
         {
-            Drive = drive;
-            Directory = nullptr;
-        }
-
-        void Change(VirtualComputer::Directory* directory)
-        {
-            Drive = nullptr;
-            Directory = directory;
+            Drive::s_DriveCurrent = drive;
+            path.clear();
+            directory = nullptr;
         }
         
         bool IsDrive() const
         {
-            return Drive != nullptr;
+            return directory == nullptr;
         }
 
         bool IsDirectory() const
         {
-            return Directory != nullptr;
+            return directory != nullptr;
         }
 
         DirectoryBody* GetBody() const
         {
-            if (IsDrive())
+            if (directory == nullptr)
             {
-                return Drive;
+                return Drive::s_DriveCurrent;
             }
             else
             {
-                return Directory;
+                return directory;
             }
         }
     }
@@ -83,6 +79,192 @@ namespace VirtualComputer::User
 
 namespace VirtualComputer::Commands
 {
+    // Utils functions
+    static bool GetDirectory(std::string& path, Drive*& drive, unsigned int& chankIndex)
+    {
+        drive = nullptr;
+        chankIndex = 0;
+
+        int i = 0;
+
+        // Get Drive
+        if (path.size() >= 2)
+        {
+            if (path[1] == ':')
+            {
+                if (path.size() == 2 || path[2] == '/' || path[2] == '\\')
+                {
+                    if ('a' <= path[0] && path[0] <= 'z')
+                    {
+                        drive = Drive::s_Drives[path[0] - 'a'];
+                    }
+                    else if ('A' <= path[0] && path[0] <= 'Z')
+                    {
+                        drive = Drive::s_Drives[path[0] - 'A'];
+                    }
+
+                    if (drive == nullptr)
+                    {
+                        return false;
+                    }
+                    
+                    if (path.size() == 2)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        i = 3;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        std::string_view pathView(path);
+        std::vector<unsigned int> pathInChanks;
+
+        if (drive == nullptr) // Start from current directory
+        {
+            drive = Drive::s_DriveCurrent;
+            
+            for (auto item : User::s_CurrentDirectory.path)
+            {
+                pathInChanks.push_back(item);
+            }
+
+            chankIndex = User::s_CurrentDirectory.GetBody()->m_ChankIndex;
+        }
+
+        Logger::Debug(drive->m_DriveName, ":");
+
+        unsigned int startNameIndex = i;
+        while (i < path.size())
+        {
+            char tv = path[i];
+            if ((path[i] == '/' || path[i] == '\\') || (i == path.size() - 1))
+            {
+                std::string_view name;
+                if (path[i] == '/' || path[i] == '\\')
+                {
+                    name = pathView.substr(startNameIndex, i - startNameIndex);
+
+                    if (name.empty()) // can't be empty
+                    {
+                        return false;
+                    }
+                }
+                else // last name
+                {
+                    name = pathView.substr(startNameIndex, i - startNameIndex + 1);
+                    if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n') // cheak last char
+                    {
+                        return false;
+                    }
+                }
+
+                if (!name.compare("."))
+                {
+                    // Do nothing
+                    Logger::Debug("<.>");
+                }
+                else if (!name.compare(".."))
+                {
+                    // Back
+                    if (pathInChanks.empty())
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        pathInChanks.pop_back();
+                        if (pathInChanks.empty())
+                        {
+                            chankIndex = 0;
+                        }
+                        else
+                        {
+                            chankIndex = pathInChanks[pathInChanks.size() - 1];
+                        }
+                        Logger::Debug("<..>");
+                    }
+                }
+                else
+                {
+                    // into sub directory
+                    if (chankIndex == 0)
+                    {
+                        drive->GoToChank(chankIndex);
+                    }
+                    else
+                    {
+                        drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
+                    }
+
+                    unsigned char count = drive->m_FileStream.Read<unsigned char>();
+                    unsigned int j = 0;
+
+                    bool found = false;
+                    while (j < MAX_DIRECTORIES && count != 0)
+                    {
+                        chankIndex = drive->m_FileStream.Read<unsigned int>();
+                        if (chankIndex != 0)
+                        {
+                            size_t index = drive->m_FileStream.GetIndex();
+                            drive->GoToChank(chankIndex);
+
+                            char* checkName = SmartEntityName().GetName(drive->m_FileStream);
+                            found = SmartEntityName::IsEqual(path.c_str() + startNameIndex, checkName, name.size(), strlen(checkName));
+
+                            if (found)
+                            {
+                                Logger::Debug(checkName);
+                                break;
+                            }
+
+                            drive->m_FileStream.ChangeIndex(index);
+                            count--;
+                        }
+                        j++;
+                    }
+
+                    if (found)
+                    {
+                        pathInChanks.push_back(chankIndex);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                i++;
+                startNameIndex = i;
+            }
+            else if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n')
+            {
+                return false;
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+        Logger::Debug("Good");
+
+        return true;
+    }
+
+    // help
+    static void Help()
+    {
+        std::cout << HelpBody();
+    }
+
     // commands help functions
     static void HelpHelp()
     {
@@ -195,44 +377,46 @@ namespace VirtualComputer::Commands
             }
             else
             {
-                std::string_view path = commandParts[1];
+                unsigned int chankIndex;
 
-                // Get DirectoryBody* by path
-                // TODO
-                // for Dubeg
-                directory = User::s_CurrentDirectory.GetBody();
+                if (GetDirectory(commandParts[1], drive, chankIndex))
+                {
+                    if (chankIndex == 0)
+                    {
+                        directory = drive;
+                    }
+                    else
+                    {
+                        directory = new Directory(chankIndex, drive);
+                    }
+                }
+                else
+                {
+                    std::cout << "The directory \"" << commandParts[1] << "\" not found.\n";
+                    return;
+                }
             }
 
             std::string directories[MAX_DIRECTORIES];
             for (size_t i = 0; i < MAX_DIRECTORIES; i++)
             {
-                directories[i] = directory->m_DirectoriesNames[i].GetName(drive->m_FileStream);
+                directories[i] = directory->m_DirectoriesNames[i].GetName();
             }
 
             std::string files[MAX_FILES];
             for (size_t i = 0; i < MAX_FILES; i++)
             {
-                files[i] = directory->m_FilesNames[i].GetName(drive->m_FileStream);
+                files[i] = directory->m_FilesNames[i].GetName();
             }
 
             std::sort(directories, directories + MAX_DIRECTORIES);
             std::sort(files, files + MAX_FILES);
 
-            int directoriesIndex = 0;
-            int filesIndex = 0;
+            int directoriesIndex = MAX_DIRECTORIES - directory->m_DirectoriesCount;
+            int filesIndex = MAX_FILES - directory->m_FilesCount;
 
             do
             {
-                while (directoriesIndex < MAX_DIRECTORIES && directories[directoriesIndex].empty())
-                {
-                    directoriesIndex++;
-                }
-
-                while (filesIndex < MAX_DIRECTORIES && files[filesIndex].empty())
-                {
-                    filesIndex++;
-                }
-
                 if (directoriesIndex < MAX_DIRECTORIES && filesIndex < MAX_FILES)
                 {
                     std::string a = directories[directoriesIndex];
@@ -270,6 +454,171 @@ namespace VirtualComputer::Commands
         {
             HelpDir();
         }
+    }
+
+    static bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
+    {
+        std::string_view action(commandParts[0]);
+
+        bool helpMode = false;
+        if (commandParts.size() > 1)
+        {
+            if (!commandParts[1].compare("/?")) // [command] /?
+            {
+                helpMode = true;
+            }
+            else if (!action.compare("help")) // help [command]
+            {
+                action = std::string_view(commandParts[1]);
+                helpMode = true;
+            }
+        }
+
+        if (!action.compare("exit"))
+        {
+            if (helpMode)
+            {
+                std::cout << "Quits the Virtual Computer.\n";
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (!action.compare("help"))
+        {
+            if (helpMode)
+            {
+                HelpHelp();
+            }
+            else
+            {
+                Help();
+            }
+        }
+        else if (!action.compare("drives"))
+        {
+            if (helpMode)
+            {
+                HelpDrives();
+            }
+            else
+            {
+                CommandDrives(command, commandParts);
+            }
+        }
+        else if (!action.compare("dir"))
+        {
+            if (helpMode)
+            {
+                HelpDir();
+            }
+            else
+            {
+                CommandDir(command, commandParts);
+            }
+        }
+        else if (!action.compare("md"))
+        {
+            Drive* drive = Drive::s_DriveCurrent;
+
+            drive->CreateDirectory(User::CreateName("a c"));
+            drive->CreateFile(User::CreateName("a c.txt"), 0);
+
+            /*
+            drive->CreateDirectory(User::CreateName("bcc"));
+            drive->CreateFile(User::CreateName("bcc.txt"), 0);
+            
+            unsigned int chankIndex = drive->CreateDirectory(User::CreateName("abc"));
+            drive->CreateFile(User::CreateName("abc.bat"), 0);
+
+            drive->CreateDirectory(User::CreateName("b b1"));
+            drive->CreateFile(User::CreateName("b b1.zip"), 0);
+
+            Directory* directory = new Directory(chankIndex, drive);
+            directory->CreateDirectory(User::CreateName("a c"));
+            directory->CreateFile(User::CreateName("a c.txt"), 0);
+
+            directory->CreateDirectory(User::CreateName("bcc"));
+            directory->CreateFile(User::CreateName("bcc.txt"), 0);
+
+            directory->CreateDirectory(User::CreateName("abc"));
+            directory->CreateFile(User::CreateName("abc.bat"), 0);
+
+            directory->CreateDirectory(User::CreateName("b b1"));
+            directory->CreateFile(User::CreateName("b b1.zip"), 0);
+            */
+        }
+        else if (!action.compare("rd"))
+        {
+
+        }
+        else if (!action.compare("cd"))
+        {
+
+        }
+        else if (!action.compare("mf"))
+        {
+
+        }
+        else if (!action.compare("rf"))
+        {
+
+        }
+        else if (!action.compare("move"))
+        {
+
+        }
+        else if (!action.compare("copy"))
+        {
+
+        }
+        else if (!action.compare("rename"))
+        {
+
+        }
+        else if (!action.compare("print"))
+        {
+
+        }
+        else if (!action.compare("edit"))
+        {
+
+        }
+        else if (!action.compare("echo"))
+        {
+            if (helpMode)
+            {
+                std::cout << "Displays messages.\n";
+            }
+            else
+            {
+                int i = command.find("echo") + 5;
+
+                if (i < command.size())
+                {
+                    std::cout << (char*)(command.c_str() + i) << "\n"; \
+                }
+            }
+        }
+        else if (!action.compare("clear"))
+        {
+            if (helpMode)
+            {
+                std::cout << "Clear the window.\n";
+            }
+            else
+            {
+                system("CLS");
+            }
+        }
+        else
+        {
+            std::cout << "The command \"" << action << "\" not exits!";
+            Help();
+        }
+
+        return true;
     }
 
     // Public Functions
@@ -376,149 +725,6 @@ namespace VirtualComputer::Commands
 
     void Close()
     {
-        delete User::s_CurrentDirectory.Directory;
-    }
-
-    bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
-    {
-        std::string_view action(commandParts[0]);
-        
-        bool helpMode = false;
-        if (commandParts.size() > 1)
-        {
-            if (!commandParts[1].compare("/?")) // [command] /?
-            {
-                helpMode = true;
-            }
-            else if (!action.compare("help")) // help [command]
-            {
-                action = std::string_view(commandParts[1]);
-                helpMode = true;
-            }
-        }
-
-        if (!action.compare("exit"))
-        {
-            if (helpMode)
-            {
-                std::cout << "Quits the Virtual Computer.\n";
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else if (!action.compare("help"))
-        {
-            if (helpMode)
-            {
-                HelpHelp();
-            }
-            else
-            {
-                Help();
-            }
-        }
-        else if (!action.compare("drives"))
-        {
-            if (helpMode)
-            {
-                HelpDrives();
-            }
-            else
-            {
-                CommandDrives(command, commandParts);
-            }
-        }
-        else if (!action.compare("dir"))
-        {
-            if (helpMode)
-            {
-                HelpDir();
-            }
-            else
-            {
-                CommandDir(command, commandParts);
-            }
-        }
-        else if (!action.compare("md"))
-        {
-
-        }
-        else if (!action.compare("rd"))
-        {
-
-        }
-        else if (!action.compare("cd"))
-        {
-
-        }
-        else if (!action.compare("mf"))
-        {
-
-        }
-        else if (!action.compare("rf"))
-        {
-
-        }
-        else if (!action.compare("move"))
-        {
-
-        }
-        else if (!action.compare("copy"))
-        {
-
-        }
-        else if (!action.compare("rename"))
-        {
-
-        }
-        else if (!action.compare("print"))
-        {
-
-        }
-        else if (!action.compare("edit"))
-        {
-
-        }
-        else if (!action.compare("echo"))
-        {
-            if (helpMode)
-            {
-                std::cout << "Displays messages.\n";
-            }
-            else
-            {
-                int i = command.find("echo") + 5;
-
-                if (i < command.size())
-                {
-                    std::cout << (char*)(command.c_str() + i) << "\n"; \
-                }
-            }
-        }
-        else if (!action.compare("clear"))
-        {
-            if (helpMode)
-            {
-                std::cout << "Clear the window.\n";
-            }
-            else
-            {
-                system("CLS");
-            }
-        }
-        else
-        {
-            std::cout << "The command \"" << action << "\" not exits!";
-            Help();
-        }
-
-        return true;
-    }
-
-    void Help()
-    {
-        std::cout << HelpBody();
+        delete User::s_CurrentDirectory.directory;
     }
 };

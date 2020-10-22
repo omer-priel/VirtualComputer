@@ -9,6 +9,7 @@ namespace VirtualComputer
 		//Static
 	public:
 		static bool IsEqual(const EntityName& nameA, const EntityName& nameB);
+		static bool IsEqual(const char* nameA, const char* nameB, const size_t sizeA, const size_t sizeB);
 
 		//None-Static
 	public:

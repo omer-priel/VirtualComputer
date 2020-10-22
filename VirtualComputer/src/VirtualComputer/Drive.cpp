@@ -209,7 +209,7 @@ namespace VirtualComputer
             {
                 break;
             }
-            if (tv == '.' || tv == ':' || tv == '\\' || tv == '\'' || tv == '\"' || tv == '\n')
+            if (tv == ':' || tv == '\\' || tv == '/' || tv == '\'' || tv == '\"' || tv == '\n')
             {
                 Logger::Error("The tv \'", tv, "\' can't be in entity name!"); // fix: entity need be directory or file.
                 return false;

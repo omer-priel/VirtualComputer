@@ -17,7 +17,25 @@ namespace VirtualComputer
 			ptrA++;
 			ptrB++;
 
-		} while (*ptrA != 0);
+		} while (*ptrA != 0 && *ptrB != 0);
+
+		return *ptrA == *ptrB;
+	}
+
+	bool SmartEntityName::IsEqual(const char* nameA, const char* nameB, const size_t sizeA, const size_t sizeB)
+	{
+		if (sizeA != sizeB)
+		{
+			return false;
+		}
+
+		for (size_t i = 0; i < sizeA; i++)
+		{
+			if (nameA[i] != nameB[i])
+			{
+				return false;
+			}
+		}
 
 		return true;
 	}

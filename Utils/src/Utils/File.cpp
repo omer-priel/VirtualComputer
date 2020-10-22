@@ -176,7 +176,7 @@ namespace Utils
 	// Read
 	Byte File::Read()
 	{
-		if (m_Mode != FileMode::Read)
+		if (m_Mode != FileMode::Read || m_Index == 0)
 		{
 			Clear();
 			m_Mode = FileMode::Read;
@@ -194,7 +194,7 @@ namespace Utils
 
 	void File::Read(char* output, const size_t& size)
 	{
-		if (m_Mode != FileMode::Read)
+		if (m_Mode != FileMode::Read || m_Index == 0)
 		{
 			Clear();
 			m_Mode = FileMode::Read;
@@ -231,7 +231,7 @@ namespace Utils
 	// Write
 	void File::Write(const Byte& value)
 	{
-		if (m_Mode != FileMode::Write)
+		if (m_Mode != FileMode::Write || m_Index == 0)
 		{
 			Clear();
 			m_Mode = FileMode::Write;
@@ -246,7 +246,7 @@ namespace Utils
 
 	void File::Write(const char* value, const size_t& size)
 	{
-		if (m_Mode != FileMode::Write)
+		if (m_Mode != FileMode::Write || m_Index == 0)
 		{
 			Clear();
 			m_Mode = FileMode::Write;

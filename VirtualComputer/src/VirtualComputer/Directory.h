@@ -16,7 +16,7 @@ namespace VirtualComputer
 		SmartEntityName m_Name;
 
 	public:
-		Directory(unsigned int chankIndex, Drive* drive)
+		Directory(const unsigned int& chankIndex, Drive* drive)
 			: m_Drive(drive)
 		{
 			m_ChankIndex = chankIndex;
