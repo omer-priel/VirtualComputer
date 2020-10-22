@@ -427,6 +427,11 @@ namespace VirtualComputer::Commands
                 std::cout << "\t<FILE>\t" << files[filesIndex] << "\n";
                 filesIndex++;
             }
+
+            if (directory->m_ChankIndex != 0)
+            {
+                delete directory;
+            }
         }
         else
         {
