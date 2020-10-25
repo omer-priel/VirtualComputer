@@ -31,7 +31,11 @@ namespace VirtualComputer::User
             if (Drive::s_DriveCurrent != drive || chankIndex != GetBody()->m_ChankIndex)
             {
                 Drive::s_DriveCurrent = drive;
-                delete directory;
+                
+                if (directory != nullptr)
+                {
+                    delete directory;
+                }
                 if (chankIndex == 0)
                 {
                     path.clear();
@@ -523,13 +527,41 @@ namespace VirtualComputer::Commands
         }
     }
 
+    static void CommandMd_SubDir(const std::string_view& name, unsigned int& chankIndex, Drive* drive, bool middleDirectory)
+    {
+        drive->GoToChank(chankIndex);
+
+        drive->m_FileStream.Write(&name[0], name.size());
+        if (name.size() < MAX_ENTITY_NAME)
+        {
+            drive->m_FileStream.Write<unsigned char>(0);
+            drive->m_FileStream += MAX_ENTITY_NAME - name.size();
+        }
+
+        if (middleDirectory)
+        {
+            drive->m_FileStream.Write<unsigned char>(1);
+
+            chankIndex = drive->GenerateChank();
+            drive->m_FileStream.Write(chankIndex);
+        }
+        else
+        {
+            drive->m_FileStream.Write<unsigned char>(0);
+            drive->m_FileStream.Write<unsigned int>(0);
+        }
+
+        std::array<char, CHANK_SIZE - MAX_ENTITY_NAME - 1 - 4> data;
+        drive->m_FileStream.Write(&data[0], data.size());
+    }
+
     static void CommandMd(std::string& command, std::vector<std::string>& commandParts)
     {
         if (commandParts.size() == 2)
         {
             Drive* drive;
             unsigned int chankIndex = 0;
-            std::vector<PathItem> pathInChanks;
+            std::vector<unsigned int> pathInChanks;
 
             std::string& path = commandParts[1];
 
@@ -555,7 +587,7 @@ namespace VirtualComputer::Commands
 
                 for (PathItem& item : User::s_CurrentDirectory.path)
                 {
-                    pathInChanks.push_back(item);
+                    pathInChanks.push_back(item.m_chankIndex);
                 }
 
                 chankIndex = User::s_CurrentDirectory.GetBody()->m_ChankIndex;
@@ -630,7 +662,7 @@ namespace VirtualComputer::Commands
                         }
                         else
                         {
-                            chankIndex = pathInChanks[pathInChanks.size() - 1].m_chankIndex;
+                            chankIndex = pathInChanks[pathInChanks.size() - 1];
                         }
                     }
                     else // Into sub directory or need to be created
@@ -755,32 +787,12 @@ namespace VirtualComputer::Commands
                     std::string_view lastToCreate = neadToCreate[neadToCreate.size() - 1];
                     neadToCreate.pop_back();
 
-                    for (std::string_view name : neadToCreate)
+                    for (const std::string_view& name : neadToCreate)
                     {
-                        drive->GoToChank(chankIndex);
-                        drive->m_FileStream.Write(&name[0], name.size());
-                        if (name.size() < MAX_ENTITY_NAME)
-                        {
-                            drive->m_FileStream.Write<unsigned char>(0);
-                            drive->m_FileStream += MAX_ENTITY_NAME - name.size();
-                        }
-                        drive->m_FileStream.Write<unsigned char>(1);
-
-                        chankIndex = drive->GenerateChank();
-                        drive->m_FileStream.Write(chankIndex);
-                        std::array<char, CHANK_SIZE - MAX_ENTITY_NAME - 1 - 4> data;
-                        drive->m_FileStream.Write(&data[0], data.size());
+                        CommandMd_SubDir(name, chankIndex, drive, true);
                     }
 
-                    drive->GoToChank(chankIndex);
-                    drive->m_FileStream.Write(&lastToCreate[0], lastToCreate.size());
-                    if (lastToCreate.size() < MAX_ENTITY_NAME)
-                    {
-                        drive->m_FileStream.Write<unsigned char>(0);
-                        drive->m_FileStream += MAX_ENTITY_NAME - name.size();
-                    }
-                    std::array<char, CHANK_SIZE - MAX_ENTITY_NAME> data;
-                    drive->m_FileStream.Write(&data[0], data.size());
+                    CommandMd_SubDir(lastToCreate, chankIndex, drive, false);
                 }
             }
         }
@@ -943,6 +955,35 @@ namespace VirtualComputer::Commands
         return true;
     }
 
+    static void PrintDirectory(int tabs, unsigned int chankIndex)
+    {
+        Directory* directory = new Directory(chankIndex, Drive::s_DriveCurrent);
+
+        for (size_t i = 0; i < tabs; i++)
+        {
+            std::cout << "  ";
+        }
+
+        std::cout << directory->m_Name.GetName() << "\n";
+
+        for (int i = 0; i < directory->m_DirectoriesCount; i++)
+        {
+            PrintDirectory(tabs + 1, directory->m_DirectoriesLocations[i]);
+        }
+
+        delete directory;
+    }
+
+    static void Test()
+    {
+        std::cout << Drive::s_DriveCurrent->m_DriveName << ":\n";
+        for (int i = 0; i < Drive::s_DriveCurrent->m_DirectoriesCount; i++)
+        {
+            PrintDirectory(1, Drive::s_DriveCurrent->m_DirectoriesLocations[i]);
+        }
+        std::cout << "--------\n";
+    }
+
     // Public Functions
     void Load()
     {
@@ -954,10 +995,11 @@ namespace VirtualComputer::Commands
         bool running = true;
         while (running)
         {
+            Test();
             // Get Command
             std::string command;
             User::GetCommand(command);
-
+            
             // do
             if (command.size() > MAX_COMMAND_SIZE)
             {
