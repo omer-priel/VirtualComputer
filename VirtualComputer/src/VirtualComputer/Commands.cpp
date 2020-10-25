@@ -352,6 +352,15 @@ namespace VirtualComputer::Commands
             << "        path - Path of the new directory\n";
     }
 
+    static void HelpRd()
+    {
+        std::cout
+            << "Delete directory.\n"
+            << "\n"
+            << "    rd [path] - Delete directory.\n"
+            << "        path - Path of the directory\n";
+    }
+
     // commands functions
     static void CommandDrives(std::string& command, std::vector<std::string>& commandParts)
     {
@@ -543,6 +552,9 @@ namespace VirtualComputer::Commands
             drive->m_FileStream.Write<unsigned char>(1);
 
             chankIndex = drive->GenerateChank();
+
+            Logger::Info("Generate Chank ", chankIndex, " for Directory");
+
             drive->m_FileStream.Write(chankIndex);
         }
         else
@@ -551,8 +563,13 @@ namespace VirtualComputer::Commands
             drive->m_FileStream.Write<unsigned int>(0);
         }
 
-        std::array<char, CHANK_SIZE - MAX_ENTITY_NAME -  1 - 4> data;
-        drive->m_FileStream.Write(&data[0], data.size());
+        std::array<char, (MAX_DIRECTORIES - 1) * 4> data1;
+        drive->m_FileStream.Write(&data1[0], data1.size());
+        
+        drive->m_FileStream.Write<unsigned char>(0);
+
+        std::array<char, MAX_FILES * 4> data2;
+        drive->m_FileStream.Write(&data2[0], data2.size());
     }
 
     static void CommandMd(std::string& command, std::vector<std::string>& commandParts)
@@ -804,6 +821,198 @@ namespace VirtualComputer::Commands
         }
     }
 
+    static void CommandRd(std::string& command, std::vector<std::string>& commandParts)
+    {
+        if (commandParts.size() == 2)
+        {
+            Drive* drive;
+            unsigned int chankIndex = 0;
+            std::vector<unsigned int> pathInChanks;
+
+            std::string& path = commandParts[1];
+            unsigned char directoryIndex = 0;
+
+            int i = 0;
+
+            // Get Drive
+            if (GetDrive(path, drive))
+            {
+                if (path.size() >= 2 && path[1] == ':')
+                {
+                    i = 3;
+                }
+            }
+            else
+            {
+                std::cout << "The directory \"" << path << "\" not found.\n";
+                return;
+            }
+
+
+            if (drive == nullptr) // Start from current directory
+            {
+                drive = Drive::s_DriveCurrent;
+
+                for (PathItem& item : User::s_CurrentDirectory.path)
+                {
+                    pathInChanks.push_back(item.m_chankIndex);
+                }
+
+                chankIndex = User::s_CurrentDirectory.GetBody()->m_ChankIndex;
+            }
+
+            std::string_view pathView(path);
+
+
+            unsigned int startNameIndex = i;
+            while (i < path.size())
+            {
+                char tv = path[i];
+                if ((path[i] == '/' || path[i] == '\\') || (i == path.size() - 1))
+                {
+                    std::string_view name;
+                    if (path[i] == '/' || path[i] == '\\')
+                    {
+                        name = pathView.substr(startNameIndex, i - startNameIndex);
+
+                        if (name.empty()) // can't be empty
+                        {
+                            std::cout << "The directory \"" << path << "\" not found.\n";
+                            return;
+                        }
+                    }
+                    else // last name
+                    {
+                        name = pathView.substr(startNameIndex, i - startNameIndex + 1);
+                        if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n') // cheak last char
+                        {
+                            std::cout << "The directory \"" << path << "\" not found.\n";
+                            return;
+                        }
+                    }
+
+                    if (!name.compare("."))
+                    {
+                        // Do nothing
+                    }
+                    else if (!name.compare(".."))
+                    {
+                        // Back
+                        if (pathInChanks.empty())
+                        {
+                            std::cout << "The directory \"" << path << "\" not found.\n";
+                            return;
+                        }
+                        else
+                        {
+                            pathInChanks.pop_back();
+                            if (pathInChanks.empty())
+                            {
+                                chankIndex = 0;
+                            }
+                            else
+                            {
+                                chankIndex = pathInChanks[pathInChanks.size() - 1];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // into sub directory
+                        if (chankIndex == 0)
+                        {
+                            drive->GoToChank(chankIndex);
+                        }
+                        else
+                        {
+                            drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
+                        }
+
+                        unsigned char count = drive->m_FileStream.Read<unsigned char>();
+
+                        bool found = false;
+                        for (unsigned char j = 0; j < count; j++)
+                        {
+                            chankIndex = drive->m_FileStream.Read<unsigned int>();
+                            size_t index = drive->m_FileStream.GetIndex();
+                            drive->GoToChank(chankIndex);
+
+                            char* checkName = SmartEntityName().GetName(drive->m_FileStream);
+                            found = SmartEntityName::IsEqual(path.c_str() + startNameIndex, checkName, name.size(), strlen(checkName));
+
+                            if (found)
+                            {
+                                pathInChanks.push_back(chankIndex);
+                                directoryIndex = j;
+                                break;
+                            }
+
+                            drive->m_FileStream.ChangeIndex(index);
+                        }
+
+                        if (!found)
+                        {
+                            std::cout << "The directory \"" << path << "\" not found.\n";
+                            return;
+                        }
+                    }
+
+                    i++;
+                    startNameIndex = i;
+                }
+                else if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n')
+                {
+                    std::cout << "The directory \"" << path << "\" not found.\n";
+                    return;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+
+            if (pathInChanks.empty())
+            {
+                std::cout << "The directory \"" << path << "\" not found.\n";
+                return;
+            }
+
+            if (drive == Drive::s_DriveCurrent)
+            {
+                if (pathInChanks.size() <= User::s_CurrentDirectory.path.size())
+                {
+                    bool same = true;
+                    for (int i = 0; same && i < pathInChanks.size(); i++)
+                    {
+                        same = (pathInChanks[i] == User::s_CurrentDirectory.path[i].m_chankIndex);
+                    }
+
+                    if (same)
+                    {
+                        std::cout << "This directory opend!\n";
+                        return;
+                    }
+                }
+            }
+
+            // Delete directory
+            if (pathInChanks.size() == 1)
+            {
+                drive->DeleteDirectory(directoryIndex);
+            }
+            else
+            {
+                chankIndex = pathInChanks[pathInChanks.size() - 2];
+                Directory directory(chankIndex, drive);
+                directory.DeleteDirectory(directoryIndex);
+            }
+        }
+        else
+        {
+            HelpCd();
+        }
+    }
+
     // DoCommand
     static bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
@@ -880,7 +1089,14 @@ namespace VirtualComputer::Commands
         }
         else if (!action.compare("rd"))
         {
-
+            if (helpMode)
+            {
+                HelpRd();
+            }
+            else
+            {
+                CommandRd(command, commandParts);
+            }
         }
         else if (!action.compare("cd"))
         {
@@ -957,7 +1173,22 @@ namespace VirtualComputer::Commands
         return true;
     }
 
-    static void PrintDirectory(int tabs, unsigned int chankIndex)
+#ifdef _DEBUG
+    static void PrintFile(int tabs, unsigned int chankIndex)
+    {
+        File* file = new File(chankIndex, Drive::s_DriveCurrent);
+
+        for (size_t i = 0; i < tabs; i++)
+        {
+            std::cout << "  ";
+        }
+
+        std::cout << file->m_Name.GetName() << "\n";
+
+        delete file;
+    }
+
+    static void PrintDirectory(int tabs, unsigned int chankIndex, bool displayFiles)
     {
         Directory* directory = new Directory(chankIndex, Drive::s_DriveCurrent);
 
@@ -973,18 +1204,36 @@ namespace VirtualComputer::Commands
             PrintDirectory(tabs + 1, directory->m_DirectoriesLocations[i]);
         }
 
+        for (int i = 0; i < directory->m_FilesCount; i++)
+        {
+            PrintFile(tabs + 1, directory->m_FilesLocations[i]);
+        }
+
         delete directory;
     }
 
-    static void PrintDrive()
+    static void PrintDrive(bool displayFiles)
     {
         std::cout << Drive::s_DriveCurrent->m_DriveName << ":\n";
+        
         for (int i = 0; i < Drive::s_DriveCurrent->m_DirectoriesCount; i++)
         {
             PrintDirectory(1, Drive::s_DriveCurrent->m_DirectoriesLocations[i]);
         }
-        std::cout << "--------\n";
+
+        for (int i = 0; i < Drive::s_DriveCurrent->m_FilesCount; i++)
+        {
+            PrintFile(1, Drive::s_DriveCurrent->m_FilesLocations[i]);
+        }
+
+        std::cout << "\n";
     }
+#else
+    static void PrintDrive(bool displayFiles)
+    {
+
+    }
+#endif
 
     // Public Functions
     void Load()
@@ -997,7 +1246,7 @@ namespace VirtualComputer::Commands
         bool running = true;
         while (running)
         {
-            PrintDrive();
+            //PrintDrive(false);
             
             // Get Command
             std::string command;
