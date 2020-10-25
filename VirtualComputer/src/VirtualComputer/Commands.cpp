@@ -497,13 +497,15 @@ namespace VirtualComputer::Commands
             Drive* drive;
             unsigned int chankIndex;
             std::vector<PathItem> pathInChanks;
+            
             if (GetDirectory(commandParts[1], drive, chankIndex, pathInChanks))
             {
                 User::s_CurrentDirectory.Change(drive, chankIndex, &pathInChanks);
             }
             else
             {
-                HelpCd();
+                std::cout << "The directory \"" << commandParts[1] << "\" not found.\n";
+                return;
             }
         }
         else
