@@ -121,14 +121,9 @@ namespace VirtualComputer::User
 namespace VirtualComputer::Commands
 {
     // Utils functions
-    static bool GetDirectory(std::string& path, Drive*& drive, unsigned int& chankIndex, std::vector<PathItem>& pathInChanks)
+    static bool GetDrive(std::string& path, Drive*& drive)
     {
         drive = nullptr;
-        chankIndex = 0;
-
-        int i = 0;
-
-        // Get Drive
         if (path.size() >= 2)
         {
             if (path[1] == ':')
@@ -143,26 +138,28 @@ namespace VirtualComputer::Commands
                     {
                         drive = Drive::s_Drives[path[0] - 'A'];
                     }
+                }
 
-                    if (drive == nullptr)
-                    {
-                        return false;
-                    }
-                    
-                    if (path.size() == 2)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        i = 3;
-                    }
-                }
-                else
-                {
-                    return false;
-                }
+                return drive != nullptr;
             }
+        }
+        return true;
+    }
+
+    static bool GetDirectory(std::string& path, Drive*& drive, unsigned int& chankIndex, std::vector<PathItem>& pathInChanks)
+    {
+        chankIndex = 0;
+
+        int i = 0;
+
+        // Get Drive
+        if (GetDrive(path, drive) && path.size() >= 2 && path[1] == ':')
+        {
+            i = 3;
+        }
+        else
+        {
+            return false;
         }
 
         std::string_view pathView(path);
@@ -337,6 +334,15 @@ namespace VirtualComputer::Commands
             << "\n"
             << "    dir [path] - Changes current directory.\n"
             << "        path - Path of directory\n";
+    }
+
+    static void HelpMd()
+    {
+        std::cout
+            << "Create new directory.\n"
+            << "\n"
+            << "    md [path] - Create new directory.\n"
+            << "        path - Path of the new directory\n";
     }
 
     // commands functions
@@ -514,6 +520,30 @@ namespace VirtualComputer::Commands
         }
     }
 
+    static void CommandMd(std::string& command, std::vector<std::string>& commandParts)
+    {
+        if (commandParts.size() == 2)
+        {
+            Drive* drive;
+            unsigned int chankIndex;
+            std::vector<PathItem> pathInChanks;
+
+            if (false)
+            {
+                User::s_CurrentDirectory.Change(drive, chankIndex, &pathInChanks);
+            }
+            else
+            {
+                HelpMd();
+            }
+        }
+        else
+        {
+            HelpMd();
+        }
+    }
+
+    // DoCommand
     static bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
         std::string_view action(commandParts[0]);
