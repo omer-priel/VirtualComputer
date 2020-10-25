@@ -535,7 +535,7 @@ namespace VirtualComputer::Commands
         if (name.size() < MAX_ENTITY_NAME)
         {
             drive->m_FileStream.Write<unsigned char>(0);
-            drive->m_FileStream += MAX_ENTITY_NAME - name.size();
+            drive->m_FileStream += MAX_ENTITY_NAME - 1 - name.size();
         }
 
         if (middleDirectory)
@@ -551,7 +551,7 @@ namespace VirtualComputer::Commands
             drive->m_FileStream.Write<unsigned int>(0);
         }
 
-        std::array<char, CHANK_SIZE - MAX_ENTITY_NAME - 1 - 4> data;
+        std::array<char, CHANK_SIZE - MAX_ENTITY_NAME -  1 - 4> data;
         drive->m_FileStream.Write(&data[0], data.size());
     }
 
@@ -787,6 +787,8 @@ namespace VirtualComputer::Commands
                     std::string_view lastToCreate = neadToCreate[neadToCreate.size() - 1];
                     neadToCreate.pop_back();
 
+                    CommandMd_SubDir(firstToCreate, chankIndex, drive, true);
+
                     for (const std::string_view& name : neadToCreate)
                     {
                         CommandMd_SubDir(name, chankIndex, drive, true);
@@ -995,7 +997,7 @@ namespace VirtualComputer::Commands
         bool running = true;
         while (running)
         {
-            Test();
+            //Test();
             
             // Get Command
             std::string command;
