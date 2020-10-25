@@ -30,7 +30,7 @@ namespace VirtualComputer
 
 		void LoadBody();
 
-		unsigned int CreateDirectory(const EntityName& name);
+		unsigned int CreateDirectory(const EntityName& name, const char*& error);
 
 		void Delete();
 
@@ -39,7 +39,7 @@ namespace VirtualComputer
 
 		void RenameDirectory(unsigned char directoryIndex, const EntityName& name);
 
-		unsigned int CreateFile(const EntityName& name, unsigned int size);
+		unsigned int CreateFile(const EntityName& name, unsigned int size, const char*& error);
 
 		void DeleteFile(unsigned char directoryIndex, const bool& first = true);
 		void DeleteFile(const EntityName& name);

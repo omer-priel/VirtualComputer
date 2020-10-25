@@ -2,6 +2,7 @@
 #include "Directory.h"
 
 #include "File.h"
+#include "ErrorMessages.h"
 
 namespace VirtualComputer
 {
@@ -32,11 +33,12 @@ namespace VirtualComputer
     }
 
     // Directories Actions
-    unsigned int Directory::CreateDirectory(const EntityName& name)
+    unsigned int Directory::CreateDirectory(const EntityName& name, const char*& error)
     {
+        error = nullptr;
         if (m_DirectoriesCount == MAX_DIRECTORIES)
         {
-            Logger::Error("Can't create more then ", MAX_DIRECTORIES, " directories!");
+            error = ErrorMessages::MaxDirectories;
             return 0;
         }
 
@@ -49,7 +51,7 @@ namespace VirtualComputer
         {
             if (m_DirectoriesNames[i].IsEqual(name))
             {
-                Logger::Error("This Name already exist!");
+                error = ErrorMessages::NameAlreadyExist;
                 return 0;
             }
         }
@@ -58,7 +60,7 @@ namespace VirtualComputer
         {
             if (m_FilesNames[i].IsEqual(name))
             {
-                Logger::Error("This Name already exist!");
+                error = ErrorMessages::NameAlreadyExist;
                 return 0;
             }
         }
@@ -160,11 +162,12 @@ namespace VirtualComputer
     }
 
     // Files Actions
-    unsigned int Directory::CreateFile(const EntityName& name, unsigned int size)
+    unsigned int Directory::CreateFile(const EntityName& name, unsigned int size, const char*& error)
     {
+        error = nullptr;
         if (m_FilesCount == MAX_FILES)
         {
-            Logger::Error("Can't create more then ", MAX_FILES, " files!");
+            error = ErrorMessages::MaxFiles;
             return 0;
         }
 
@@ -177,7 +180,7 @@ namespace VirtualComputer
         {
             if (m_DirectoriesNames[i].IsEqual(name))
             {
-                Logger::Error("This Name already exist!");
+                error = ErrorMessages::NameAlreadyExist;
                 return 0;
             }
         }
@@ -186,7 +189,7 @@ namespace VirtualComputer
         {
             if (m_FilesNames[i].IsEqual(name))
             {
-                Logger::Error("This Name already exist!");
+                error = ErrorMessages::NameAlreadyExist;
                 return 0;
             }
         }

@@ -163,6 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\VirtualComputer\ErrorMessages.cpp" />
     <ClCompile Include="src\VirtualComputer\Commands.cpp" />
     <ClCompile Include="src\VirtualComputer\File.cpp" />
     <ClCompile Include="src\VirtualComputer\SmartEntityName.cpp" />
@@ -179,6 +180,7 @@
     <ClCompile Include="src\VirtualComputer\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\VirtualComputer\ErrorMessages.h" />
     <ClInclude Include="src\VirtualComputer\Commands.h" />
     <ClInclude Include="src\VirtualComputer\Directory.h" />
     <ClInclude Include="src\VirtualComputer\File.h" />
