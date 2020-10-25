@@ -976,7 +976,7 @@ namespace VirtualComputer::Commands
         delete directory;
     }
 
-    static void Test()
+    static void PrintDrive()
     {
         std::cout << Drive::s_DriveCurrent->m_DriveName << ":\n";
         for (int i = 0; i < Drive::s_DriveCurrent->m_DirectoriesCount; i++)
@@ -997,7 +997,7 @@ namespace VirtualComputer::Commands
         bool running = true;
         while (running)
         {
-            //Test();
+            PrintDrive();
             
             // Get Command
             std::string command;
