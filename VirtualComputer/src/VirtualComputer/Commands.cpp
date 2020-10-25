@@ -693,7 +693,7 @@ namespace VirtualComputer::Commands
                                 if (found)
                                 {
                                     chankIndex = chankIndexCheak;
-                                    pathInChanks.emplace_back(chankIndex, checkName);
+                                    pathInChanks.push_back(chankIndex);
                                     break;
                                 }
 
@@ -996,6 +996,7 @@ namespace VirtualComputer::Commands
         while (running)
         {
             Test();
+            
             // Get Command
             std::string command;
             User::GetCommand(command);
