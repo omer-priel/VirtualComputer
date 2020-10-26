@@ -474,8 +474,9 @@ namespace VirtualComputer::Commands
     {
         output = 0;
         unsigned int v = 1;
-        for (const char& tv : text)
+        for (int i = text.size() - 1; i >= 0; i--)
         {
+            const char& tv = text[i];
             if ('0' <= tv && tv <= '9')
             {
                 output += v * (tv - '0');

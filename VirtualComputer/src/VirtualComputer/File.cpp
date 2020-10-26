@@ -8,6 +8,8 @@ namespace VirtualComputer
     {
         unsigned int chankIndex = drive->GenerateChank();
 
+        Logger::Info("Generate Chank ", chankIndex, " for File \"", &name[0], "\"");
+
         drive->GoToChank(chankIndex);
         drive->m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
         drive->m_FileStream.Write(size);
@@ -83,6 +85,7 @@ namespace VirtualComputer
             {
                 drive->GoToChank(chankIndex, CHANK_SIZE - 4);
                 drive->DeleteChank(chankIndex);
+                Logger::Info("Delete Chank ", chankIndex);
 
                 if (CHANK_SIZE - 4 > size)
                 {
@@ -117,9 +120,10 @@ namespace VirtualComputer
             {
                 FileBodyChank* chank = new FileBodyChank;
 
-                chank->ChankIndex = m_Drive->m_FileStream.Read<unsigned char>();
+                chank->ChankIndex = m_Drive->m_FileStream.Read<unsigned int>();
 
                 m_Drive->GoToChank(chank->ChankIndex);
+                auto a = CHANK_SIZE - 4;
                 if (neadToLoad <= CHANK_SIZE - 4)
                 {
                     m_Drive->m_FileStream.Read(chank->Body, neadToLoad);
@@ -165,13 +169,12 @@ namespace VirtualComputer
 
     void File::Resize(unsigned int newSize)
     {
-        Logger::Debug("Resize(", newSize, ")");
         if (newSize != m_Size)
         {
             m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME);
             m_Drive->m_FileStream.Write(newSize);
 
-            if (newSize < m_Size)
+            if (newSize < m_Size) // Remove Bytes
             {
                 if (newSize <= FIRST_FILE_BODY_SIZE)
                 {
@@ -180,10 +183,10 @@ namespace VirtualComputer
 
                     while (!m_BodyChanks.empty())
                     {
-                        unsigned int chankIndex = m_BodyChanks.back()->ChankIndex;
-                        m_Drive->DeleteChank(chankIndex);
+                        auto chank = m_BodyChanks.back();
+                        m_Drive->DeleteChank(chank->ChankIndex);
                         m_BodyChanks.pop_back();
-                        Logger::Debug("Resize Delete: ", chankIndex);
+                        delete chank;
                     }
                 }
                 else
@@ -193,29 +196,94 @@ namespace VirtualComputer
 
                     while (m_BodyChanks.size() > chanksNeeded)
                     {
-                        unsigned int chankIndex = m_BodyChanks.back()->ChankIndex;
-                        m_Drive->DeleteChank(chankIndex);
+                        auto chank = m_BodyChanks.back();
+                        m_Drive->DeleteChank(chank->ChankIndex);
                         m_BodyChanks.pop_back();
-                        Logger::Debug("Resize Delete: ", chankIndex);
+                        delete chank;
                     }
 
                     m_Drive->GoToChank(m_BodyChanks[chanksNeeded - 1]->ChankIndex, CHANK_SIZE - 4);
                     m_Drive->m_FileStream.Write<unsigned int>(0);
                 }
             }
-            else
+            else // Add Bytes
             {
-                if (newSize > FIRST_FILE_BODY_SIZE)
+                std::array<char, CHANK_SIZE - 4> data;
+                data.fill(0);
+                unsigned int sizeFull = m_Size;
+                if (newSize <= FIRST_FILE_BODY_SIZE)
                 {
-                    Chank data;
-                    data.fill(0);
-
+                    m_Drive->m_FileStream += sizeFull;
+                    m_Drive->m_FileStream.Write(&data[0], FIRST_FILE_BODY_SIZE - sizeFull);
+                }
+                else
+                {
                     unsigned int chanksNeeded = (newSize - FIRST_FILE_BODY_SIZE);
                     chanksNeeded = chanksNeeded / (CHANK_SIZE - 4) + (chanksNeeded % (CHANK_SIZE - 4) > 0 ? 1 : 0);
+                    chanksNeeded -= m_BodyChanks.size();
 
-                    
+                    if (sizeFull <= FIRST_FILE_BODY_SIZE)
+                    {
+                        m_Drive->m_FileStream += sizeFull;
+                        if (sizeFull != FIRST_FILE_BODY_SIZE)
+                        {
+                            m_Drive->m_FileStream.Write(&data[0], FIRST_FILE_BODY_SIZE - sizeFull);
+                            sizeFull = FIRST_FILE_BODY_SIZE;
+                        }
 
-                    m_Drive->m_FileStream.Write<unsigned int>(0);
+                        while (chanksNeeded > 0)
+                        {
+                            unsigned int chankIndex = m_Drive->GenerateChank();
+                            Logger::Info("Generate Chank ", chankIndex, " for File \"", m_Name.GetName(), "\"");
+                            m_Drive->m_FileStream.Write(chankIndex);
+                            
+                            m_Drive->GoToChank(chankIndex);
+                            FileBodyChank* chank = new FileBodyChank();
+                            chank->ChankIndex = chankIndex;
+                            memcpy(chank->Body, &data[0], data.size());
+                            m_Drive->m_FileStream.Write(&data[0], data.size());
+
+                            m_BodyChanks.push_back(chank);
+                            chanksNeeded--;
+                        }
+                        m_Drive->m_FileStream.Write<unsigned int>(0);
+                    }
+                    else
+                    {
+                        unsigned int chankIndex = m_BodyChanks[m_BodyChanks.size() - 1]->ChankIndex;
+                        m_Drive->GoToChank(chankIndex);
+                        unsigned int i = (sizeFull - FIRST_FILE_BODY_SIZE) % (CHANK_SIZE - 4);
+                        if (i != 0)
+                        {
+                            m_Drive->m_FileStream += i;
+
+                            auto chank = m_BodyChanks[m_BodyChanks.size() - 1];
+                            memcpy(&chank->Body[i], &data[0], CHANK_SIZE - 4 - i);
+                            m_Drive->m_FileStream.Write(&data[0], CHANK_SIZE - 4 - i);
+                        }
+                        else
+                        {
+                            m_Drive->m_FileStream += CHANK_SIZE - 4;
+                        }
+
+                        while (chanksNeeded > 0)
+                        {
+                            chankIndex = m_Drive->GenerateChank();
+                            Logger::Info("Generate Chank ", chankIndex, " for File \"", m_Name.GetName(), "\"");
+                            m_Drive->m_FileStream.Write(chankIndex);
+                            
+                            m_Drive->GoToChank(chankIndex);
+
+                            FileBodyChank* chank = new FileBodyChank();
+                            chank->ChankIndex = chankIndex;
+                            memcpy(chank->Body, &data[0], data.size());
+                            m_Drive->m_FileStream.Write(&data[0], data.size());
+
+                            m_BodyChanks.push_back(chank);
+                            chanksNeeded--;
+                        }
+                        m_Drive->m_FileStream.Write<unsigned int>(0);
+                    }
                 }
             }
 
