@@ -470,6 +470,25 @@ namespace VirtualComputer::Commands
         return EntityType::Directory;
     }
 
+    static bool TextToNumber(const std::string& text, unsigned int& output)
+    {
+        output = 0;
+        unsigned int v = 1;
+        for (const char& tv : text)
+        {
+            if ('0' <= tv && tv <= '9')
+            {
+                output += v * (tv - '0');
+                v *= 10;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // help
     static void Help()
     {
@@ -590,10 +609,10 @@ namespace VirtualComputer::Commands
             << "        path  - Path of the file\n"
             << "        start - The plase to start the write\n"
             << "        text  - The text to write\n"
-            << "    rd [path] /s [size] - Resize file.\n"
+            << "    rd [path] [/r | /resize] [size] - Resize file.\n"
             << "        path - Path of the file\n"
             << "        size - The new size of the file\n"
-            << "    rd [path] /c - Clean file.\n"
+            << "    rd [path] [/c | /clean] - Clean file.\n"
             << "        path - Path of the file\n";
     }
 
@@ -1739,7 +1758,7 @@ namespace VirtualComputer::Commands
     static void CommandEdit(std::string& command, std::vector<std::string>& commandParts)
     {
         // Nead code
-        if (commandParts.size() == 2)
+        if (3 == commandParts.size() || commandParts.size() == 4)
         {
             DirectoryBody* directory;
             Drive* drive;
@@ -1749,7 +1768,46 @@ namespace VirtualComputer::Commands
             if (GetEntity(commandParts[1], drive, chankIndex, pathInChanks, fileIndex) == EntityType::File)
             {
                 File file = File(chankIndex, drive);
-                // TODO
+                
+                // Do Edit
+                if (commandParts.size() == 3)
+                {
+                    if (!commandParts[2].compare("/c") || !commandParts[2].compare("/clean")) // rd [path] [/c | /clean]
+                    {
+                        file.Resize(0);
+                    }
+                    else // rd [path] [text]
+                    {
+                        file.Write(0, commandParts[2]);
+                    }
+                }
+                else
+                {
+                    if (!commandParts[2].compare("/r") || !commandParts[2].compare("/resize")) // rd [path] [/r | /resize] [size]
+                    {
+                        unsigned int size = 0;
+                        if (TextToNumber(commandParts[3], size))
+                        {
+                            file.Resize(size);
+                        }
+                        else
+                        {
+                            std::cout << "\"" << commandParts[3] << "\" is not number.\n";
+                        }
+                    }
+                    else // rd [path] [start] [text]
+                    {
+                        unsigned int start = 0;
+                        if (TextToNumber(commandParts[2], start))
+                        {
+                            file.Write(start, commandParts[3]);
+                        }
+                        else
+                        {
+                            std::cout << "\"" << commandParts[2] << "\" is not number.\n";
+                        }
+                    }
+                }
             }
             else
             {

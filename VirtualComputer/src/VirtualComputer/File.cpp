@@ -162,4 +162,14 @@ namespace VirtualComputer
         }
         std::cout << "\n";
     }
+
+    void File::Resize(unsigned int newSize)
+    {
+        Logger::Debug("Resize(", newSize, ")");
+    }
+
+    void File::Write(unsigned int index, const std::string& text)
+    {
+        Logger::Debug("Write(", index, ", \"", text, "\")");
+    }
 }

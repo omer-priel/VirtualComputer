@@ -54,5 +54,9 @@ namespace VirtualComputer
 		void LoadBody();
 
 		void Print();
+
+		void Resize(unsigned int newSize);
+
+		void Write(unsigned int index, const std::string& text);
 	};
 }
