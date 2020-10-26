@@ -44,7 +44,7 @@ namespace VirtualComputer
 
         if (!Drive::CheakEntityName(name))
         {
-            return false;
+            return 0;
         }
 
         for (unsigned char i = 0; i < m_DirectoriesCount; i++)
@@ -105,7 +105,6 @@ namespace VirtualComputer
         }
     }
 
-
     void Directory::DeleteDirectory(unsigned char directoryIndex, const bool& first)
     {
         unsigned int chankIndex = m_DirectoriesLocations[directoryIndex];
@@ -147,11 +146,6 @@ namespace VirtualComputer
         }
     }
 
-    void Directory::DeleteDirectory(const EntityName& name)
-    {
-
-    }
-
     void Directory::RenameDirectory(unsigned char directoryIndex, const EntityName& name)
     {
         unsigned int chankIndex = m_DirectoriesLocations[directoryIndex];
@@ -162,7 +156,7 @@ namespace VirtualComputer
     }
 
     // Files Actions
-    unsigned int Directory::CreateFile(const EntityName& name, unsigned int size, const char*& error)
+    unsigned int Directory::CreateFile(const EntityName& name, char* content, size_t size, const char*& error)
     {
         error = nullptr;
         if (m_FilesCount == MAX_FILES)
@@ -173,7 +167,7 @@ namespace VirtualComputer
 
         if (!Drive::CheakEntityName(name))
         {
-            return false;
+            return 0;
         }
 
         for (unsigned char i = 0; i < m_DirectoriesCount; i++)
@@ -194,7 +188,7 @@ namespace VirtualComputer
             }
         }
 
-        unsigned int chankIndex = File::Create(m_Drive, name, size);
+        unsigned int chankIndex = File::Create(m_Drive, name, content, size);
 
         m_FilesLocations[m_FilesCount] = chankIndex;
         m_FilesNames[m_FilesCount] = name;
@@ -234,11 +228,6 @@ namespace VirtualComputer
             m_Drive->m_FileStream += lastIndex * 4;
             m_Drive->m_FileStream.Write<unsigned int>(0);
         }
-    }
-
-    void Directory::DeleteFile(const EntityName& name)
-    {
-
     }
 
     void Directory::RenameFile(unsigned char fileIndex, const EntityName& name)

@@ -39,10 +39,9 @@ namespace VirtualComputer
 
 		void RenameDirectory(unsigned char directoryIndex, const EntityName& name);
 
-		unsigned int CreateFile(const EntityName& name, unsigned int size, const char*& error);
+		unsigned int CreateFile(const EntityName& name, char* content, size_t size, const char*& error);
 
 		void DeleteFile(unsigned char directoryIndex, const bool& first = true);
-		void DeleteFile(const EntityName& name);
 
 		void RenameFile(unsigned char fileIndex, const EntityName& name);
 	};

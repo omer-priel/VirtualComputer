@@ -17,7 +17,7 @@ namespace VirtualComputer
 
 		// Static
 	public:
-		static unsigned int Create(Drive* drive, const EntityName& name, unsigned int size = 0);
+		static unsigned int Create(Drive* drive, const EntityName& name, char* content, size_t size);
 		static void DeleteFile(Drive* drive, unsigned int chankIndex);
 
 		// None-Static

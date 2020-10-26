@@ -361,6 +361,18 @@ namespace VirtualComputer::Commands
             << "        path - Path of the directory\n";
     }
 
+    static void HelpMf()
+    {
+        std::cout
+            << "Create new file.\n"
+            << "\n"
+            << "    mf [path] - Create new file.\n"
+            << "        path - Path of the new file\n"
+            << "    mf [path] [content] - Create new file with content.\n"
+            << "        path - Path of the new file\n"
+            << "        content - Content of the new file\n";
+    }
+
     // commands functions
     static void CommandDrives(std::string& command, std::vector<std::string>& commandParts)
     {
@@ -495,7 +507,7 @@ namespace VirtualComputer::Commands
                 directoriesIndex++;
             }
             
-            while (directoriesIndex < directory->m_DirectoriesCount)
+            while (filesIndex < directory->m_FilesCount)
             {
                 std::cout << "\t<FILE>\t" << files[filesIndex] << "\n";
                 filesIndex++;
@@ -1013,6 +1025,332 @@ namespace VirtualComputer::Commands
         }
     }
 
+    static void CommandMf_CreateFile(Drive*& drive, unsigned int& chankIndex, bool& isCurrentDirectory,
+        EntityName& fileName, char* contentPtr, size_t& contentSize)
+    {
+        const char* error = nullptr;
+        if (chankIndex == 0)
+        {
+            chankIndex = drive->CreateFile(fileName, contentPtr, contentSize, error);
+
+            if (chankIndex != 0)
+            {
+                drive->LoadBody();
+            }
+            else
+            {
+                std::cout << error << "\n";
+                return;
+            }
+        }
+        else
+        {
+            if (isCurrentDirectory)
+            {
+                chankIndex = User::s_CurrentDirectory.directory->CreateFile(fileName, contentPtr, contentSize, error);
+
+                if (chankIndex != 0)
+                {
+                    drive->LoadBody();
+                }
+                else
+                {
+                    std::cout << error << "\n";
+                    return;
+                }
+            }
+            else
+            {
+                Directory directory(chankIndex, drive);
+                chankIndex = directory.CreateFile(fileName, contentPtr, contentSize, error);
+
+                if (chankIndex == -1)
+                {
+                    std::cout << error << "\n";
+                    return;
+                }
+            }
+        }
+    }
+
+    static void CommandMf(std::string& command, std::vector<std::string>& commandParts)
+    {
+        if (commandParts.size() == 2 || commandParts.size() == 3)
+        {
+            Drive* drive;
+            unsigned int chankIndex = 0;
+            std::vector<unsigned int> pathInChanks;
+
+            std::string& path = commandParts[1];
+
+            int i = 0;
+
+            // Get Drive
+            if (GetDrive(path, drive))
+            {
+                if (path.size() >= 2 && path[1] == ':')
+                {
+                    i = 3;
+                }
+            }
+            else
+            {
+                HelpMf();
+                return;
+            }
+
+            if (drive == nullptr) // Start from current directory
+            {
+                drive = Drive::s_DriveCurrent;
+
+                for (PathItem& item : User::s_CurrentDirectory.path)
+                {
+                    pathInChanks.push_back(item.m_chankIndex);
+                }
+
+                chankIndex = User::s_CurrentDirectory.GetBody()->m_ChankIndex;
+            }
+
+            // Get path
+            std::string_view pathView(path);
+
+            bool exist = true;
+            std::string_view firstToCreate;
+            std::vector<std::string_view> neadToCreate;
+
+            unsigned int startNameIndex = i;
+            while (i < path.size())
+            {
+                char tv = path[i];
+                if ((path[i] == '/' || path[i] == '\\') || (i == path.size() - 1))
+                {
+                    std::string_view name;
+                    if (path[i] == '/' || path[i] == '\\')
+                    {
+                        name = pathView.substr(startNameIndex, i - startNameIndex);
+
+                        if (name.empty()) // can't be empty
+                        {
+                            HelpMf();
+                            return;
+                        }
+                    }
+                    else // last name
+                    {
+                        name = pathView.substr(startNameIndex, i - startNameIndex + 1);
+                        if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n') // cheak last char
+                        {
+                            HelpMf();
+                            return;
+                        }
+                    }
+
+                    if (name.size() > MAX_ENTITY_NAME)
+                    {
+                        HelpMf();
+                        return;
+                    }
+
+                    if (!name.compare(".")) // Do nothing
+                    {
+                        if (!exist)
+                        {
+                            HelpMf();
+                            return;
+                        }
+                    }
+                    else if (!name.compare("..")) // Back
+                    {
+                        if (!exist)
+                        {
+                            HelpMf();
+                            return;
+                        }
+
+                        if (pathInChanks.empty())
+                        {
+                            HelpMf();
+                            return;
+                        }
+
+                        pathInChanks.pop_back();
+                        if (pathInChanks.empty())
+                        {
+                            chankIndex = 0;
+                        }
+                        else
+                        {
+                            chankIndex = pathInChanks[pathInChanks.size() - 1];
+                        }
+                    }
+                    else // Into sub directory or need to be created
+                    {
+                        if (exist) //Into sub directory
+                        {
+                            if (chankIndex == 0)
+                            {
+                                drive->GoToChank(chankIndex);
+                            }
+                            else
+                            {
+                                drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
+                            }
+
+                            unsigned char count = drive->m_FileStream.Read<unsigned char>();
+
+                            bool found = false;
+                            for (unsigned char j = 0; j < count; j++)
+                            {
+                                unsigned int chankIndexCheak = drive->m_FileStream.Read<unsigned int>();
+                                size_t index = drive->m_FileStream.GetIndex();
+                                drive->GoToChank(chankIndexCheak);
+
+                                char* checkName = SmartEntityName().GetName(drive->m_FileStream);
+                                found = SmartEntityName::IsEqual(path.c_str() + startNameIndex, checkName, name.size(), strlen(checkName));
+
+                                if (found)
+                                {
+                                    chankIndex = chankIndexCheak;
+                                    pathInChanks.push_back(chankIndex);
+                                    break;
+                                }
+
+                                drive->m_FileStream.ChangeIndex(index);
+                            }
+
+                            if (!found)
+                            {
+                                firstToCreate = name;
+                                exist = false;
+                            }
+                        }
+                        else
+                        {
+                            neadToCreate.push_back(name);
+                        }
+                    }
+
+                    i++;
+                    startNameIndex = i;
+                }
+                else if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n')
+                {
+                    HelpMd();
+                    return;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+
+            // Create File and Directories
+            if (exist)
+            {
+                std::cout << "Exist directory with the same path.\n";
+                return;
+            }
+
+            const char* error;
+            bool isCurrentDirectory = (drive == Drive::s_DriveCurrent && chankIndex == User::s_CurrentDirectory.GetBody()->m_ChankIndex);
+
+            EntityName fileName;
+            if (neadToCreate.empty())
+            {
+                memcpy(&fileName, &firstToCreate[0], firstToCreate.size());
+                fileName[firstToCreate.size()] = 0;
+            }
+            else
+            {
+                std::string_view& lastToCreate = neadToCreate[neadToCreate.size() - 1];
+                neadToCreate.pop_back();
+
+                memcpy(&fileName, &lastToCreate[0], lastToCreate.size());
+                fileName[lastToCreate.size()] = 0;
+
+                // Create Directories
+                EntityName name;
+                memcpy(&name, &firstToCreate[0], firstToCreate.size());
+                name[firstToCreate.size()] = 0;
+                if (chankIndex == 0)
+                {
+                    chankIndex = drive->CreateDirectory(name, error);
+
+                    if (chankIndex != 0)
+                    {
+                        drive->LoadBody();
+                    }
+                    else
+                    {
+                        std::cout << error << "\n";
+                        return;
+                    }
+                }
+                else
+                {
+                    if (isCurrentDirectory)
+                    {
+                        chankIndex = User::s_CurrentDirectory.directory->CreateDirectory(name, error);
+
+                        if (chankIndex != 0)
+                        {
+                            drive->LoadBody();
+                        }
+                        else
+                        {
+                            std::cout << error << "\n";
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        Directory directory(chankIndex, drive);
+                        chankIndex = directory.CreateDirectory(name, error);
+
+                        if (chankIndex == -1)
+                        {
+                            std::cout << error << "\n";
+                            return;
+                        }
+                    }
+                }
+
+                if (!neadToCreate.empty())
+                {
+                    std::string_view& lastDirectory = neadToCreate[neadToCreate.size() - 1];
+                    neadToCreate.pop_back();
+
+                    CommandMd_SubDir(firstToCreate, chankIndex, drive, true);
+
+                    for (const std::string_view& name : neadToCreate)
+                    {
+                        CommandMd_SubDir(name, chankIndex, drive, true);
+                    }
+
+                    CommandMd_SubDir(lastDirectory, chankIndex, drive, false);
+                }
+
+                isCurrentDirectory = false;
+            }
+
+            // Create File
+            char* contentPtr = nullptr;
+            size_t contentSize = 0;
+
+            if (commandParts.size() == 3)
+            {
+                contentPtr = (char*)commandParts[2].c_str();
+                contentSize = commandParts[2].size();
+            }
+
+            CommandMf_CreateFile(drive, chankIndex, isCurrentDirectory, fileName, contentPtr, contentSize);
+        }
+        else
+        {
+            HelpMf();
+        }
+    }
+
     // DoCommand
     static bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
@@ -1111,7 +1449,14 @@ namespace VirtualComputer::Commands
         }
         else if (!action.compare("mf"))
         {
-
+            if (helpMode)
+            {
+                HelpMf();
+            }
+            else
+            {
+                CommandMf(command, commandParts);
+            }
         }
         else if (!action.compare("rf"))
         {
@@ -1201,12 +1546,15 @@ namespace VirtualComputer::Commands
 
         for (int i = 0; i < directory->m_DirectoriesCount; i++)
         {
-            PrintDirectory(tabs + 1, directory->m_DirectoriesLocations[i]);
+            PrintDirectory(tabs + 1, directory->m_DirectoriesLocations[i], displayFiles);
         }
 
-        for (int i = 0; i < directory->m_FilesCount; i++)
+        if (displayFiles)
         {
-            PrintFile(tabs + 1, directory->m_FilesLocations[i]);
+            for (int i = 0; i < directory->m_FilesCount; i++)
+            {
+                PrintFile(tabs + 1, directory->m_FilesLocations[i]);
+            }
         }
 
         delete directory;
@@ -1218,12 +1566,15 @@ namespace VirtualComputer::Commands
         
         for (int i = 0; i < Drive::s_DriveCurrent->m_DirectoriesCount; i++)
         {
-            PrintDirectory(1, Drive::s_DriveCurrent->m_DirectoriesLocations[i]);
+            PrintDirectory(1, Drive::s_DriveCurrent->m_DirectoriesLocations[i], displayFiles);
         }
 
-        for (int i = 0; i < Drive::s_DriveCurrent->m_FilesCount; i++)
+        if (displayFiles)
         {
-            PrintFile(1, Drive::s_DriveCurrent->m_FilesLocations[i]);
+            for (int i = 0; i < Drive::s_DriveCurrent->m_FilesCount; i++)
+            {
+                PrintFile(1, Drive::s_DriveCurrent->m_FilesLocations[i]);
+            }
         }
 
         std::cout << "\n";
@@ -1246,7 +1597,7 @@ namespace VirtualComputer::Commands
         bool running = true;
         while (running)
         {
-            //PrintDrive(false);
+            //PrintDrive(true);
             
             // Get Command
             std::string command;

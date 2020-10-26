@@ -4,7 +4,7 @@
 namespace VirtualComputer
 {
     // Static
-    unsigned int File::Create(Drive* drive, const EntityName& name, unsigned int size)
+    unsigned int File::Create(Drive* drive, const EntityName& name, char* content, size_t size)
     {
         unsigned int chankIndex = drive->GenerateChank();
 
@@ -12,41 +12,54 @@ namespace VirtualComputer
         drive->m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
         drive->m_FileStream.Write(size);
 
-        if (size > 0)
+        if (size <= FIRST_FILE_BODY_SIZE)
         {
-            std::array<char, CHANK_SIZE> data;
-            data.fill(0);
-
-            drive->m_FileStream.Write(&data[0], FIRST_FILE_BODY_SIZE);
-
-            if (size > FIRST_FILE_BODY_SIZE)
+            drive->m_FileStream.Write(&content[0], size);
+            if (size != FIRST_FILE_BODY_SIZE)
             {
-                size -= FIRST_FILE_BODY_SIZE;
+                std::array<char, FIRST_FILE_BODY_SIZE> data;
+                memset(&data[0], 0, FIRST_FILE_BODY_SIZE - size);
+                drive->m_FileStream.Write(&data[0], FIRST_FILE_BODY_SIZE - size);
+            }
+        }
+        else
+        {
+            drive->m_FileStream.Write(&content[0], FIRST_FILE_BODY_SIZE);
 
-                unsigned chankIndexNow = chankIndex;
-                while (size > 0)
+            size -= FIRST_FILE_BODY_SIZE;
+            content += FIRST_FILE_BODY_SIZE;
+
+            unsigned chankIndexNow = chankIndex;
+            while (size > 0)
+            {
+                unsigned int nextChankIndex = drive->GenerateChank();
+
+                drive->GoToChank(chankIndexNow, CHANK_SIZE - 4);
+                drive->m_FileStream.Write<unsigned int>(nextChankIndex);
+
+                chankIndexNow = nextChankIndex;
+
+                drive->GoToChank(chankIndexNow);
+                if (size > CHANK_SIZE - 4)
                 {
-                    unsigned int nextChankIndex = drive->GenerateChank();
-
-                    drive->GoToChank(chankIndexNow, CHANK_SIZE - 4);
-                    drive->m_FileStream.Write<unsigned int>(nextChankIndex);
-
-                    chankIndexNow = nextChankIndex;
-
-                    drive->GoToChank(chankIndexNow);
-                    drive->m_FileStream.Write(&data[0], CHANK_SIZE - 4);
-                    if (size > CHANK_SIZE - 4)
+                    drive->m_FileStream.Write(&content[0], CHANK_SIZE - 4);
+                    size -= CHANK_SIZE - 4;
+                }
+                else
+                {
+                    drive->m_FileStream.Write(&content[0], size);
+                    if (size != CHANK_SIZE - 4)
                     {
-                        size -= CHANK_SIZE - 4;
+                        std::array<char, CHANK_SIZE - 4> data;
+                        memset(&data[0], 0, CHANK_SIZE - 4 - size);
+                        drive->m_FileStream.Write(&data[0], CHANK_SIZE - 4 - size);
                     }
-                    else
-                    {
-                        size = 0;
-                    }
+
+                    size = 0;
                 }
             }
-            drive->m_FileStream.Write<unsigned int>(0);
         }
+        drive->m_FileStream.Write<unsigned int>(0);
 
         return chankIndex;
     }
