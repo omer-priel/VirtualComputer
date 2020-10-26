@@ -578,6 +578,25 @@ namespace VirtualComputer::Commands
             << "        path - Path of the file\n";
     }
 
+    static void HelpEdit()
+    {
+        std::cout
+            << "Edit file.\n"
+            << "\n"
+            << "    rd [path] [text] - Write text in the start of the file.\n"
+            << "        path - Path of the file\n"
+            << "        text - The text to write\n"
+            << "    rd [path] [start] [text] - Write text in the middel of the file.\n"
+            << "        path  - Path of the file\n"
+            << "        start - The plase to start the write\n"
+            << "        text  - The text to write\n"
+            << "    rd [path] /s [size] - Resize file.\n"
+            << "        path - Path of the file\n"
+            << "        size - The new size of the file\n"
+            << "    rd [path] /c - Clean file.\n"
+            << "        path - Path of the file\n";
+    }
+
     // commands functions
     static void CommandDrives(std::string& command, std::vector<std::string>& commandParts)
     {
@@ -1717,6 +1736,33 @@ namespace VirtualComputer::Commands
         }
     }
 
+    static void CommandEdit(std::string& command, std::vector<std::string>& commandParts)
+    {
+        // Nead code
+        if (commandParts.size() == 2)
+        {
+            DirectoryBody* directory;
+            Drive* drive;
+            unsigned int chankIndex;
+            std::optional<unsigned char> fileIndex;
+            std::vector<unsigned int> pathInChanks;
+            if (GetEntity(commandParts[1], drive, chankIndex, pathInChanks, fileIndex) == EntityType::File)
+            {
+                File file = File(chankIndex, drive);
+                // TODO
+            }
+            else
+            {
+                std::cout << "The file \"" << commandParts[1] << "\" not found.\n";
+                return;
+            }
+        }
+        else
+        {
+            HelpEdit();
+        }
+    }
+
     // DoCommand
     static bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
@@ -1867,11 +1913,14 @@ namespace VirtualComputer::Commands
         }
         else if (!action.compare("edit"))
         {
-            
-        }
-        else if (!action.compare("editor"))
+        if (helpMode)
         {
-
+            HelpEdit();
+        }
+        else
+        {
+            CommandEdit(command, commandParts);
+        }
         }
         else if (!action.compare("echo"))
         {

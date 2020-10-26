@@ -6,7 +6,7 @@ namespace VirtualComputer
 	exit    - Exit the program
 	help    - Show all the commands
 	drives  - Show drives list
-	dir     - Show directory
+	dir     - Display directory
 	md      - Create directory
 	rd      - Remove directory
 	cd      - Change directory
@@ -15,9 +15,8 @@ namespace VirtualComputer
 	move    - Move file or directory
 	copy    - File or directory
 	rename  - Rename file or directory
-	print   - Show file
+	print   - Display file
 	edit    - Edit file
-	editor  - Visual Progam for edit file
 	echo    - Print text
 	clear   - Clear the window.
 
