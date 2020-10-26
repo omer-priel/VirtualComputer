@@ -13,6 +13,7 @@
 namespace VirtualComputer::User
 {
     static char s_StartLine[MAX_COMMAND_SIZE - 10];
+    static const char s_Split = '\\';
 
     static struct CurrentDirectory
     {
@@ -23,8 +24,26 @@ namespace VirtualComputer::User
         {
             s_StartLine[0] = Drive::s_DriveCurrent->m_DriveName;
             s_StartLine[1] = ':';
-            s_StartLine[2] = '\\';
-            s_StartLine[3] = 0;
+            s_StartLine[2] = s_Split;
+            size_t i = 3;
+            for (auto& item : path)
+            {
+                if (i + item.m_Name.size() < MAX_COMMAND_SIZE - 12)
+                {
+                    memcpy(s_StartLine + i, &item.m_Name[0], item.m_Name.size());
+                    i += item.m_Name.size();
+                    s_StartLine[i] = '\\';
+                    i++;
+                }
+                else
+                {
+                    memcpy(s_StartLine + i, &item.m_Name[0], 10);
+                    i += 10;
+                    s_StartLine[i] = '\\';
+                    break;
+                }
+            }
+            s_StartLine[i] = 0;
         }
 
         void Change(Drive* drive, unsigned int& chankIndex, std::vector<PathItem>* pathInChanks)
@@ -52,29 +71,14 @@ namespace VirtualComputer::User
                     directory = new Directory(chankIndex, drive);
                 }
 
-                s_StartLine[0] = drive->m_DriveName;
-                s_StartLine[1] = ':';
-                s_StartLine[2] = '\\';
-                size_t i = 3;
-                for (auto& item : path)
-                {
-                    if (i + item.m_Name.size() < MAX_COMMAND_SIZE - 12)
-                    {
-                        memcpy(s_StartLine + i, &item.m_Name[0], item.m_Name.size());
-                        i += item.m_Name.size();
-                        s_StartLine[i] = '\\';
-                        i++;
-                    }
-                    else
-                    {
-                        memcpy(s_StartLine + i, &item.m_Name[0], 10);
-                        i += 10;
-                        s_StartLine[i] = '\\';
-                        break;
-                    }
-                }
-                s_StartLine[i] = 0;
+                Change();
             }
+        }
+
+        void Update(unsigned int index, EntityName newName)
+        {
+            path[index].m_Name = std::string(&newName[0]);
+            Change();
         }
         
         bool IsDrive() const
@@ -1611,11 +1615,7 @@ namespace VirtualComputer::Commands
             }
         }
 
-        if (error == nullptr)
-        {
-            Logger::Debug("renamed ", &newName[0]);
-        }
-        else
+        if (error != nullptr)
         {
             std::cout << error << "\n";
         }
@@ -1649,7 +1649,26 @@ namespace VirtualComputer::Commands
             EntityType type = GetEntity(commandParts[1], drive, chankIndex, pathInChanks, entityIndex);
             if (type != EntityType::NotExists)
             {
+                // Rename Entity
                 CommandRename_Rename(drive, pathInChanks, type, entityIndex, chankIndex, newName);
+                
+                // Update Start line
+                if (drive == Drive::s_DriveCurrent)
+                {
+                    int i = 0;
+                    while (i < User::s_CurrentDirectory.path.size())
+                    {
+                        if (chankIndex == User::s_CurrentDirectory.path[i].m_chankIndex)
+                        {
+                            User::s_CurrentDirectory.Update(i, newName);
+                            break;
+                        }
+                        else
+                        {
+                            i++;
+                        }
+                    }
+                }
             }
             else
             {
