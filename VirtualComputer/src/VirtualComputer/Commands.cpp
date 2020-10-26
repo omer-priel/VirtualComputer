@@ -606,6 +606,9 @@ namespace VirtualComputer::Commands
             << "    rd [path] [text] - Write text in the start of the file.\n"
             << "        path - Path of the file\n"
             << "        text - The text to write\n"
+            << "    rd [path] [/a | /append] [text] - Append text to file.\n"
+            << "        path  - Path of the file\n"
+            << "        text  - The text to write\n"
             << "    rd [path] [start] [text] - Write text in the middel of the file.\n"
             << "        path  - Path of the file\n"
             << "        start - The plase to start the write\n"
@@ -1796,12 +1799,23 @@ namespace VirtualComputer::Commands
                             std::cout << "\"" << commandParts[3] << "\" is not number.\n";
                         }
                     }
+                    else if (!commandParts[2].compare("/a") || !commandParts[2].compare("/append")) // rd [path] [/a | /append] [text]
+                    {
+                        file.Write(file.m_Size, commandParts[3]);
+                    }
                     else // rd [path] [start] [text]
                     {
                         unsigned int start = 0;
                         if (TextToNumber(commandParts[2], start))
                         {
-                            file.Write(start, commandParts[3]);
+                            if (start <= file.m_Size)
+                            {
+                                file.Write(start, commandParts[3]);
+                            }
+                            else
+                            {
+                                std::cout << start << " bigger then the file size!\n";
+                            }
                         }
                         else
                         {
