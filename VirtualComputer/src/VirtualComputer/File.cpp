@@ -166,6 +166,61 @@ namespace VirtualComputer
     void File::Resize(unsigned int newSize)
     {
         Logger::Debug("Resize(", newSize, ")");
+        if (newSize != m_Size)
+        {
+            m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME);
+            m_Drive->m_FileStream.Write(newSize);
+
+            if (newSize < m_Size)
+            {
+                if (newSize <= FIRST_FILE_BODY_SIZE)
+                {
+                    m_Drive->m_FileStream += FIRST_FILE_BODY_SIZE;
+                    m_Drive->m_FileStream.Write<unsigned int>(0);
+
+                    while (!m_BodyChanks.empty())
+                    {
+                        unsigned int chankIndex = m_BodyChanks.back()->ChankIndex;
+                        m_Drive->DeleteChank(chankIndex);
+                        m_BodyChanks.pop_back();
+                        Logger::Debug("Resize Delete: ", chankIndex);
+                    }
+                }
+                else
+                {
+                    unsigned int chanksNeeded = (newSize - FIRST_FILE_BODY_SIZE);
+                    chanksNeeded = chanksNeeded / (CHANK_SIZE - 4) + (chanksNeeded % (CHANK_SIZE - 4) > 0 ? 1 : 0);
+
+                    while (m_BodyChanks.size() > chanksNeeded)
+                    {
+                        unsigned int chankIndex = m_BodyChanks.back()->ChankIndex;
+                        m_Drive->DeleteChank(chankIndex);
+                        m_BodyChanks.pop_back();
+                        Logger::Debug("Resize Delete: ", chankIndex);
+                    }
+
+                    m_Drive->GoToChank(m_BodyChanks[chanksNeeded - 1]->ChankIndex, CHANK_SIZE - 4);
+                    m_Drive->m_FileStream.Write<unsigned int>(0);
+                }
+            }
+            else
+            {
+                if (newSize > FIRST_FILE_BODY_SIZE)
+                {
+                    Chank data;
+                    data.fill(0);
+
+                    unsigned int chanksNeeded = (newSize - FIRST_FILE_BODY_SIZE);
+                    chanksNeeded = chanksNeeded / (CHANK_SIZE - 4) + (chanksNeeded % (CHANK_SIZE - 4) > 0 ? 1 : 0);
+
+                    
+
+                    m_Drive->m_FileStream.Write<unsigned int>(0);
+                }
+            }
+
+            m_Size = newSize;
+        }
     }
 
     void File::Write(unsigned int index, const std::string& text)

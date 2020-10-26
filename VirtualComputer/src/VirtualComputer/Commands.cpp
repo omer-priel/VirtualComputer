@@ -2023,7 +2023,7 @@ namespace VirtualComputer::Commands
 
         for (size_t i = 0; i < tabs; i++)
         {
-            std::cout << "  ";
+            std::cout << " ";
         }
 
         std::cout << file->m_Name.GetName() << " (" << file->m_Size << " Bytes)\n";
@@ -2095,7 +2095,7 @@ namespace VirtualComputer::Commands
         bool running = true;
         while (running)
         {
-            //PrintDrive(true);
+            PrintDrive(true);
             
             // Get Command
             std::string command;
