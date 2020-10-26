@@ -146,10 +146,36 @@ namespace VirtualComputer
         }
     }
 
-    void Directory::RenameDirectory(unsigned char directoryIndex, const EntityName& name)
+    void Directory::RenameDirectory(std::optional<unsigned char>& directoryIndex, unsigned int chankIndex, const EntityName& name, const char*& error)
     {
-        unsigned int chankIndex = m_DirectoriesLocations[directoryIndex];
-        m_DirectoriesNames[directoryIndex].Change(name);
+        error = nullptr;
+        for (unsigned char i = 0; i < m_FilesCount; i++)
+        {
+            if (m_FilesNames[i].IsEqual(name))
+            {
+                error = ErrorMessages::NameAlreadyExist;
+                return;
+            }
+        }
+
+        for (unsigned char i = 0; i < m_DirectoriesCount; i++)
+        {
+            if (m_DirectoriesNames[i].IsEqual(name))
+            {
+                if (i != directoryIndex)
+                {
+                    error = ErrorMessages::NameAlreadyExist;
+                }
+                return;
+            }
+
+            if (!directoryIndex.has_value() && chankIndex == m_DirectoriesLocations[i])
+            {
+                directoryIndex.emplace(i);
+            }
+        }
+
+        m_DirectoriesNames[directoryIndex.value()].Change(name);
 
         m_Drive->GoToChank(chankIndex);
         m_Drive->m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
@@ -230,8 +256,30 @@ namespace VirtualComputer
         }
     }
 
-    void Directory::RenameFile(unsigned char fileIndex, const EntityName& name)
+    void Directory::RenameFile(unsigned char fileIndex, const EntityName& name, const char*& error)
     {
+        error = nullptr;
+        for (unsigned char i = 0; i < m_DirectoriesCount; i++)
+        {
+            if (m_DirectoriesNames[i].IsEqual(name))
+            {
+                error = ErrorMessages::NameAlreadyExist;
+                return;
+            }
+        }
+
+        for (unsigned char i = 0; i < m_FilesCount; i++)
+        {
+            if (m_FilesNames[i].IsEqual(name))
+            {
+                if (i != fileIndex)
+                {
+                    error = ErrorMessages::NameAlreadyExist;
+                }
+                return;
+            }
+        }
+
         unsigned int chankIndex = m_FilesLocations[fileIndex];
         m_FilesNames[fileIndex].Change(name);
 

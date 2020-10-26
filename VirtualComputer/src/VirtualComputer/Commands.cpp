@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <string_view>
+#include <optional>
 
 #include "HelpBody.h"
 #include "Drive.h"
@@ -26,7 +27,7 @@ namespace VirtualComputer::User
             s_StartLine[3] = 0;
         }
 
-        void Change(Drive* drive, unsigned int chankIndex, std::vector<PathItem>* pathInChanks)
+        void Change(Drive* drive, unsigned int& chankIndex, std::vector<PathItem>* pathInChanks)
         {            
             if (Drive::s_DriveCurrent != drive || chankIndex != GetBody()->m_ChankIndex)
             {
@@ -194,7 +195,6 @@ namespace VirtualComputer::Commands
         unsigned int startNameIndex = i;
         while (i < path.size())
         {
-            char tv = path[i];
             if ((path[i] == '/' || path[i] == '\\') || (i == path.size() - 1))
             {
                 std::string_view name;
@@ -301,9 +301,10 @@ namespace VirtualComputer::Commands
         return GetDirectory(path, drive, chankIndex, pathInChanks);
     }
 
-    static EntityType GetEntity(std::string& path, Drive*& drive, unsigned int& chankIndex, std::vector<unsigned int>& pathInChanks, unsigned char* fileIndex = nullptr)
+    static EntityType GetEntity(std::string& path, Drive*& drive, unsigned int& chankIndex, std::vector<unsigned int>& pathInChanks, std::optional<unsigned char>& entityIndex)
     {
         chankIndex = 0;
+        entityIndex.reset();
 
         int i = 0;
 
@@ -339,7 +340,6 @@ namespace VirtualComputer::Commands
         unsigned int startNameIndex = i;
         while (i < path.size())
         {
-            char tv = path[i];
             if ((path[i] == '/' || path[i] == '\\') || (i == path.size() - 1))
             {
                 std::string_view name;
@@ -368,6 +368,7 @@ namespace VirtualComputer::Commands
                 else if (!name.compare(".."))
                 {
                     // Back
+                    entityIndex.reset();
                     if (pathInChanks.empty())
                     {
                         return EntityType::NotExists;
@@ -411,6 +412,7 @@ namespace VirtualComputer::Commands
 
                         if (found)
                         {
+                            entityIndex.emplace(j);
                             pathInChanks.push_back(chankIndex);
                             break;
                         }
@@ -434,7 +436,7 @@ namespace VirtualComputer::Commands
 
                             if (found)
                             {
-                                *fileIndex = j;
+                                entityIndex.emplace(j);
                                 return EntityType::File;
                             }
 
@@ -551,6 +553,16 @@ namespace VirtualComputer::Commands
             << "\n"
             << "    rd [path] - Delete file.\n"
             << "        path - Path of the file\n";
+    }
+
+    static void HelpRename()
+    {
+        std::cout
+            << "Rename directory or file.\n"
+            << "\n"
+            << "    rename [path] [new name] - Rename directory or file.\n"
+            << "        path - Path of directory or file\n"
+            << "        new name - New name for the directory or the file\n";
     }
 
     // commands functions
@@ -1514,25 +1526,25 @@ namespace VirtualComputer::Commands
             DirectoryBody* directory;
             Drive* drive;
             unsigned int chankIndex;
-            unsigned char fileIndex;
+            std::optional<unsigned char> fileIndex;
             std::vector<unsigned int> pathInChanks;
-            if (GetEntity(commandParts[1], drive, chankIndex, pathInChanks, &fileIndex) == EntityType::File)
+            if (GetEntity(commandParts[1], drive, chankIndex, pathInChanks, fileIndex) == EntityType::File)
             {
                 if (pathInChanks.empty()) // In drive
                 {
-                    drive->DeleteFile(fileIndex);
+                    drive->DeleteFile(fileIndex.value());
                 }
                 else // In Directory
                 {
                     chankIndex = pathInChanks[pathInChanks.size() - 1];
                     if (drive == Drive::s_DriveCurrent && chankIndex == User::s_CurrentDirectory.GetBody()->m_ChankIndex)
                     {
-                        User::s_CurrentDirectory.directory->DeleteFile(fileIndex);
+                        User::s_CurrentDirectory.directory->DeleteFile(fileIndex.value());
                     }
                     else
                     {
                         Directory directory = Directory(chankIndex, drive);
-                        directory.DeleteFile(fileIndex);
+                        directory.DeleteFile(fileIndex.value());
                     }
                 }
             }
@@ -1545,6 +1557,109 @@ namespace VirtualComputer::Commands
         else
         {
             HelpRf();
+        }
+    }
+
+    static void CommandRename_Rename(Drive*& drive, std::vector<unsigned int>& pathInChanks,
+        EntityType& type, std::optional<unsigned char>& entityIndex, unsigned int chankIndex, EntityName& newName)
+    {
+        const char* error;
+
+        if (type == EntityType::Directory) // Directory
+        {
+            if (pathInChanks.empty()) // Entity is Drive
+            {
+                std::cout << "Can't rename drive.\n";
+                return;
+            }
+            else if (pathInChanks.size() == 1) // In drive
+            {
+                drive->RenameDirectory(entityIndex, chankIndex, newName, error);
+            }
+            else // In directory
+            {
+                unsigned int chankIndexDir = pathInChanks[pathInChanks.size() - 2];
+                if (drive == Drive::s_DriveCurrent && chankIndexDir == User::s_CurrentDirectory.GetBody()->m_ChankIndex)
+                {
+                    User::s_CurrentDirectory.directory->RenameDirectory(entityIndex, chankIndex, newName, error);
+                }
+                else
+                {
+                    Directory* directory = new Directory(chankIndexDir, drive);
+                    directory->RenameDirectory(entityIndex, chankIndex, newName, error);
+                }
+            }
+        }
+        else // File
+        {
+            if (pathInChanks.empty()) // In drive
+            {
+                drive->RenameFile(entityIndex.value(), newName, error);
+            }
+            else // In directory
+            {
+                unsigned int chankIndex = pathInChanks[pathInChanks.size() - 1];
+                if (drive == Drive::s_DriveCurrent && chankIndex == User::s_CurrentDirectory.GetBody()->m_ChankIndex)
+                {
+                    User::s_CurrentDirectory.directory->RenameFile(entityIndex.value(), newName, error);
+                }
+                else
+                {
+                    Directory* directory = new Directory(chankIndex, drive);
+                    directory->RenameFile(entityIndex.value(), newName, error);
+                }
+            }
+        }
+
+        if (error == nullptr)
+        {
+            Logger::Debug("renamed ", &newName[0]);
+        }
+        else
+        {
+            std::cout << error << "\n";
+        }
+    }
+
+    static void CommandRename(std::string& command, std::vector<std::string>& commandParts)
+    {
+        if (commandParts.size() == 3)
+        {
+            if ((commandParts[2]).size() > MAX_ENTITY_NAME)
+            {
+                std::cout << "The name can't be more the " << MAX_ENTITY_NAME << " characters.\n";
+                return;
+            }
+
+            EntityName newName;
+            memcpy(&newName, &(commandParts[2])[0], (commandParts[2]).size());
+            newName[(commandParts[2]).size()] = 0;
+
+            if (!Drive::CheakEntityName(newName))
+            {
+                HelpRename();
+                return;
+            }
+
+            DirectoryBody* directory;
+            Drive* drive;
+            unsigned int chankIndex;
+            std::optional<unsigned char> entityIndex;
+            std::vector<unsigned int> pathInChanks;
+            EntityType type = GetEntity(commandParts[1], drive, chankIndex, pathInChanks, entityIndex);
+            if (type != EntityType::NotExists)
+            {
+                CommandRename_Rename(drive, pathInChanks, type, entityIndex, chankIndex, newName);
+            }
+            else
+            {
+                std::cout << "The directory or file \"" << commandParts[1] << "\" not found.\n";
+                return;
+            }
+        }
+        else
+        {
+            HelpRename();
         }
     }
 
@@ -1676,13 +1791,24 @@ namespace VirtualComputer::Commands
         }
         else if (!action.compare("rename"))
         {
-
+            if (helpMode)
+            {
+                HelpRename();
+            }
+            else
+            {
+                CommandRename(command, commandParts);
+            }
         }
         else if (!action.compare("print"))
         {
 
         }
         else if (!action.compare("edit"))
+        {
+
+        }
+        else if (!action.compare("editor"))
         {
 
         }
@@ -1807,7 +1933,7 @@ namespace VirtualComputer::Commands
             std::string command;
             User::GetCommand(command);
             
-            // do
+            // Do command
             if (command.size() > MAX_COMMAND_SIZE)
             {
                 Logger::Error("The cammand can't be bigger then ", MAX_COMMAND_SIZE, "!");

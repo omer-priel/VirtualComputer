@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "Utils/File.h"
 
 #include "DirectoryBody.h"
@@ -96,12 +98,12 @@ namespace VirtualComputer
 
 		void DeleteDirectory(unsigned char directoryIndex);
 
-		void RenameDirectory(unsigned char directoryIndex, const EntityName& name);
+		void RenameDirectory(std::optional<unsigned char>& directoryIndex, unsigned int chankIndex, const EntityName& name, const char*& error);
 
 		unsigned int CreateFile(const EntityName& name, char* content, size_t size, const char*& error);
 
 		void DeleteFile(unsigned char fileIndex);
 
-		void RenameFile(unsigned char fileIndex, const EntityName& name);
+		void RenameFile(unsigned char fileIndex, const EntityName& name, const char*& error);
 	};
 }

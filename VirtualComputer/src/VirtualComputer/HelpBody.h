@@ -17,6 +17,7 @@ namespace VirtualComputer
 	rename  - Rename file or directory
 	print   - Show file
 	edit    - Edit file
+	editor  - Visual Progam for edit file
 	echo    - Print text
 	clear   - Clear the window.
 
