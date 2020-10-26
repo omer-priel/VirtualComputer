@@ -102,7 +102,7 @@ namespace VirtualComputer
     {
         m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME);
 
-        m_Size = m_Drive->m_FileStream.Read<unsigned char>();
+        m_Size = m_Drive->m_FileStream.Read<unsigned int>();
 
         if (m_Size < FIRST_FILE_BODY_SIZE)
         {
@@ -134,5 +134,32 @@ namespace VirtualComputer
                 m_BodyChanks.push_back(chank);
             }
         }
+    }
+
+    void File::Print()
+    {
+        if (m_Size <= FIRST_FILE_BODY_SIZE)
+        {
+            std::cout.write(m_FirstBodyChank, m_Size);
+        }
+        else
+        {
+            std::cout.write(m_FirstBodyChank, FIRST_FILE_BODY_SIZE);
+
+            size_t size = m_Size - FIRST_FILE_BODY_SIZE;
+            for (const auto& chank : m_BodyChanks)
+            {
+                if (size > CHANK_SIZE - 4)
+                {
+                    std::cout.write(chank->Body, CHANK_SIZE - 4);
+                }
+                else
+                {
+                    std::cout.write(chank->Body, size);
+                }
+                size -= (CHANK_SIZE - 4);
+            }
+        }
+        std::cout << "\n";
     }
 }

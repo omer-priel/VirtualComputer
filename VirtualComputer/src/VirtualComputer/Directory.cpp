@@ -128,18 +128,22 @@ namespace VirtualComputer
 
         if (first)
         {
+            m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME);
+            m_Drive->m_FileStream.Write(m_DirectoriesCount);
+
             unsigned char lastIndex = m_DirectoriesCount;
             if (directoryIndex != lastIndex)
             {
                 m_DirectoriesLocations[directoryIndex] = m_DirectoriesLocations[lastIndex];
                 m_DirectoriesNames[directoryIndex] = m_DirectoriesNames[lastIndex];
+
+                m_Drive->m_FileStream += directoryIndex * 4;
+                m_Drive->m_FileStream.Write<unsigned int>(m_DirectoriesLocations[directoryIndex]);
+                m_Drive->m_FileStream -= directoryIndex * 4;
             }
 
             m_DirectoriesLocations[lastIndex] = 0;
             m_DirectoriesNames[lastIndex].Clear();
-
-            m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME);
-            m_Drive->m_FileStream.Write(m_DirectoriesCount);
 
             m_Drive->m_FileStream += lastIndex * 4;
             m_Drive->m_FileStream.Write<unsigned int>(0);
@@ -238,18 +242,22 @@ namespace VirtualComputer
         m_FilesCount--;
         if (first)
         {
+            m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + (1 + MAX_DIRECTORIES * 4));
+            m_Drive->m_FileStream.Write(m_FilesCount);
+
             unsigned char lastIndex = m_FilesCount;
             if (fileIndex != lastIndex)
             {
                 m_FilesLocations[fileIndex] = m_FilesLocations[lastIndex];
                 m_FilesNames[fileIndex] = m_FilesNames[lastIndex];
+
+                m_Drive->m_FileStream += fileIndex * 4;
+                m_Drive->m_FileStream.Write<unsigned int>(m_FilesLocations[fileIndex]);
+                m_Drive->m_FileStream -= fileIndex * 4;
             }
 
             m_FilesLocations[lastIndex] = 0;
             m_FilesNames[lastIndex].Clear();
-
-            m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + (1 + MAX_DIRECTORIES * 4));
-            m_Drive->m_FileStream.Write(m_FilesCount);
 
             m_Drive->m_FileStream += lastIndex * 4;
             m_Drive->m_FileStream.Write<unsigned int>(0);

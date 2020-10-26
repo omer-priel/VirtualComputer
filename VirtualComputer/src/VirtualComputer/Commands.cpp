@@ -569,6 +569,15 @@ namespace VirtualComputer::Commands
             << "        new name - New name for the directory or the file\n";
     }
 
+    static void HelpPrint()
+    {
+        std::cout
+            << "Display file.\n"
+            << "\n"
+            << "    rd [path] - Display file.\n"
+            << "        path - Path of the file\n";
+    }
+
     // commands functions
     static void CommandDrives(std::string& command, std::vector<std::string>& commandParts)
     {
@@ -1682,6 +1691,32 @@ namespace VirtualComputer::Commands
         }
     }
 
+    static void CommandPrint(std::string& command, std::vector<std::string>& commandParts)
+    {
+        if (commandParts.size() == 2)
+        {
+            DirectoryBody* directory;
+            Drive* drive;
+            unsigned int chankIndex;
+            std::optional<unsigned char> fileIndex;
+            std::vector<unsigned int> pathInChanks;
+            if (GetEntity(commandParts[1], drive, chankIndex, pathInChanks, fileIndex) == EntityType::File)
+            {
+                File file = File(chankIndex, drive);
+                file.Print();
+            }
+            else
+            {
+                std::cout << "The file \"" << commandParts[1] << "\" not found.\n";
+                return;
+            }
+        }
+        else
+        {
+            HelpPrint();
+        }
+    }
+
     // DoCommand
     static bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
@@ -1821,11 +1856,18 @@ namespace VirtualComputer::Commands
         }
         else if (!action.compare("print"))
         {
-
+            if (helpMode)
+            {
+                HelpPrint();
+            }
+            else
+            {
+                CommandPrint(command, commandParts);
+            }
         }
         else if (!action.compare("edit"))
         {
-
+            
         }
         else if (!action.compare("editor"))
         {
@@ -1946,7 +1988,7 @@ namespace VirtualComputer::Commands
         bool running = true;
         while (running)
         {
-            PrintDrive(true);
+            //PrintDrive(true);
             
             // Get Command
             std::string command;

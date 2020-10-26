@@ -52,5 +52,7 @@ namespace VirtualComputer
 		}
 
 		void LoadBody();
+
+		void Print();
 	};
 }

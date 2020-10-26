@@ -10,7 +10,7 @@
 #define CHANK_SIZE (MAX_ENTITY_NAME + 2 + ((MAX_DIRECTORIES + MAX_FILES) * 4))
 #define DELETED_MEMORY_LIST_SIZE ((CHANK_SIZE - 1) / 4)
 #define FIRST_FILE_BODY_SIZE (CHANK_SIZE - MAX_ENTITY_NAME - 4 - 4)
-#define MAX_COMMAND_SIZE 50
+#define MAX_COMMAND_SIZE 114
 
 // Librarys
 #include <iostream>
