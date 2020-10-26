@@ -124,6 +124,14 @@ namespace VirtualComputer::User
 
 namespace VirtualComputer::Commands
 {
+    // Subclasses
+    enum class EntityType : unsigned char
+    {
+        NotExists = 0,
+        Directory = 1,
+        File = 2
+    };
+
     // Utils functions
     static bool GetDrive(std::string& path, Drive*& drive)
     {
@@ -293,6 +301,169 @@ namespace VirtualComputer::Commands
         return GetDirectory(path, drive, chankIndex, pathInChanks);
     }
 
+    static EntityType GetEntity(std::string& path, Drive*& drive, unsigned int& chankIndex, std::vector<unsigned int>& pathInChanks, unsigned char* fileIndex = nullptr)
+    {
+        chankIndex = 0;
+
+        int i = 0;
+
+        // Get Drive
+        if (GetDrive(path, drive))
+        {
+            if (path.size() >= 2 && path[1] == ':')
+            {
+                i = 3;
+            }
+        }
+        else
+        {
+            return EntityType::NotExists;
+        }
+
+        pathInChanks.clear();
+
+        if (drive == nullptr) // Start from current directory
+        {
+            drive = Drive::s_DriveCurrent;
+
+            for (PathItem& item : User::s_CurrentDirectory.path)
+            {
+                pathInChanks.push_back(item.m_chankIndex);
+            }
+
+            chankIndex = User::s_CurrentDirectory.GetBody()->m_ChankIndex;
+        }
+
+        std::string_view pathView(path);
+
+        unsigned int startNameIndex = i;
+        while (i < path.size())
+        {
+            char tv = path[i];
+            if ((path[i] == '/' || path[i] == '\\') || (i == path.size() - 1))
+            {
+                std::string_view name;
+                if (path[i] == '/' || path[i] == '\\')
+                {
+                    name = pathView.substr(startNameIndex, i - startNameIndex);
+
+                    if (name.empty()) // can't be empty
+                    {
+                        return EntityType::NotExists;
+                    }
+                }
+                else // last name
+                {
+                    name = pathView.substr(startNameIndex, i - startNameIndex + 1);
+                    if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n') // cheak last char
+                    {
+                        return EntityType::NotExists;
+                    }
+                }
+
+                if (!name.compare("."))
+                {
+                    // Do nothing
+                }
+                else if (!name.compare(".."))
+                {
+                    // Back
+                    if (pathInChanks.empty())
+                    {
+                        return EntityType::NotExists;
+                    }
+                    else
+                    {
+                        pathInChanks.pop_back();
+                        if (pathInChanks.empty())
+                        {
+                            chankIndex = 0;
+                        }
+                        else
+                        {
+                            chankIndex = pathInChanks[pathInChanks.size() - 1];
+                        }
+                    }
+                }
+                else
+                {
+                    // into sub directory
+                    if (chankIndex == 0)
+                    {
+                        drive->GoToChank(chankIndex);
+                    }
+                    else
+                    {
+                        drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
+                    }
+
+                    unsigned char count = drive->m_FileStream.Read<unsigned char>(); // Directory count
+
+                    bool found = false;
+                    for (unsigned char j = 0; j < count; j++)
+                    {
+                        chankIndex = drive->m_FileStream.Read<unsigned int>();
+                        size_t index = drive->m_FileStream.GetIndex();
+                        drive->GoToChank(chankIndex);
+
+                        char* checkName = SmartEntityName().GetName(drive->m_FileStream);
+                        found = SmartEntityName::IsEqual(path.c_str() + startNameIndex, checkName, name.size(), strlen(checkName));
+
+                        if (found)
+                        {
+                            pathInChanks.push_back(chankIndex);
+                            break;
+                        }
+
+                        drive->m_FileStream.ChangeIndex(index);
+                    }
+
+                    if (!found && i == path.size() - 1) // last name
+                    {
+                        drive->m_FileStream += (MAX_DIRECTORIES - count) * 4;
+                        count = drive->m_FileStream.Read<unsigned char>(); // File count
+
+                        for (unsigned char j = 0; j < count; j++)
+                        {
+                            chankIndex = drive->m_FileStream.Read<unsigned int>();
+                            size_t index = drive->m_FileStream.GetIndex();
+                            drive->GoToChank(chankIndex);
+
+                            char* checkName = SmartEntityName().GetName(drive->m_FileStream);
+                            found = SmartEntityName::IsEqual(path.c_str() + startNameIndex, checkName, name.size(), strlen(checkName));
+
+                            if (found)
+                            {
+                                *fileIndex = j;
+                                return EntityType::File;
+                            }
+
+                            drive->m_FileStream.ChangeIndex(index);
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        return EntityType::NotExists;
+                    }
+                }
+
+                i++;
+                startNameIndex = i;
+            }
+            else if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n')
+            {
+                return EntityType::NotExists;
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+        return EntityType::Directory;
+    }
+
     // help
     static void Help()
     {
@@ -371,6 +542,15 @@ namespace VirtualComputer::Commands
             << "    mf [path] [content] - Create new file with content.\n"
             << "        path - Path of the new file\n"
             << "        content - Content of the new file\n";
+    }
+
+    static void HelpRf()
+    {
+        std::cout
+            << "Delete file.\n"
+            << "\n"
+            << "    rd [path] - Delete file.\n"
+            << "        path - Path of the file\n";
     }
 
     // commands functions
@@ -772,11 +952,7 @@ namespace VirtualComputer::Commands
                 {
                     chankIndex = drive->CreateDirectory(name, error);
 
-                    if (chankIndex != 0)
-                    {
-                        drive->LoadBody();
-                    }
-                    else
+                    if (chankIndex == 0)
                     {
                         std::cout << error << "\n";
                         return;
@@ -788,11 +964,7 @@ namespace VirtualComputer::Commands
                     {
                         chankIndex = User::s_CurrentDirectory.directory->CreateDirectory(name, error);
 
-                        if (chankIndex != 0)
-                        {
-                            drive->LoadBody();
-                        }
-                        else
+                        if (chankIndex == 0)
                         {
                             std::cout << error << "\n";
                             return;
@@ -1021,7 +1193,7 @@ namespace VirtualComputer::Commands
         }
         else
         {
-            HelpCd();
+            HelpRd();
         }
     }
 
@@ -1033,11 +1205,7 @@ namespace VirtualComputer::Commands
         {
             chankIndex = drive->CreateFile(fileName, contentPtr, contentSize, error);
 
-            if (chankIndex != 0)
-            {
-                drive->LoadBody();
-            }
-            else
+            if (chankIndex == 0)
             {
                 std::cout << error << "\n";
                 return;
@@ -1049,11 +1217,7 @@ namespace VirtualComputer::Commands
             {
                 chankIndex = User::s_CurrentDirectory.directory->CreateFile(fileName, contentPtr, contentSize, error);
 
-                if (chankIndex != 0)
-                {
-                    drive->LoadBody();
-                }
-                else
+                if (chankIndex == 0)
                 {
                     std::cout << error << "\n";
                     return;
@@ -1276,11 +1440,7 @@ namespace VirtualComputer::Commands
                 {
                     chankIndex = drive->CreateDirectory(name, error);
 
-                    if (chankIndex != 0)
-                    {
-                        drive->LoadBody();
-                    }
-                    else
+                    if (chankIndex == 0)
                     {
                         std::cout << error << "\n";
                         return;
@@ -1292,11 +1452,7 @@ namespace VirtualComputer::Commands
                     {
                         chankIndex = User::s_CurrentDirectory.directory->CreateDirectory(name, error);
 
-                        if (chankIndex != 0)
-                        {
-                            drive->LoadBody();
-                        }
-                        else
+                        if (chankIndex == 0)
                         {
                             std::cout << error << "\n";
                             return;
@@ -1348,6 +1504,47 @@ namespace VirtualComputer::Commands
         else
         {
             HelpMf();
+        }
+    }
+    
+    static void CommandRf(std::string& command, std::vector<std::string>& commandParts)
+    {
+        if (commandParts.size() == 2)
+        {
+            DirectoryBody* directory;
+            Drive* drive;
+            unsigned int chankIndex;
+            unsigned char fileIndex;
+            std::vector<unsigned int> pathInChanks;
+            if (GetEntity(commandParts[1], drive, chankIndex, pathInChanks, &fileIndex) == EntityType::File)
+            {
+                if (pathInChanks.empty()) // In drive
+                {
+                    drive->DeleteFile(fileIndex);
+                }
+                else // In Directory
+                {
+                    chankIndex = pathInChanks[pathInChanks.size() - 1];
+                    if (drive == Drive::s_DriveCurrent && chankIndex == User::s_CurrentDirectory.GetBody()->m_ChankIndex)
+                    {
+                        User::s_CurrentDirectory.directory->DeleteFile(fileIndex);
+                    }
+                    else
+                    {
+                        Directory directory = Directory(chankIndex, drive);
+                        directory.DeleteFile(fileIndex);
+                    }
+                }
+            }
+            else
+            {
+                std::cout << "The file \"" << commandParts[1] << "\" not found.\n";
+                return;
+            }
+        }
+        else
+        {
+            HelpRf();
         }
     }
 
@@ -1460,7 +1657,14 @@ namespace VirtualComputer::Commands
         }
         else if (!action.compare("rf"))
         {
-
+            if (helpMode)
+            {
+                HelpRf();
+            }
+            else
+            {
+                CommandRf(command, commandParts);
+            }
         }
         else if (!action.compare("move"))
         {
@@ -1528,7 +1732,7 @@ namespace VirtualComputer::Commands
             std::cout << "  ";
         }
 
-        std::cout << file->m_Name.GetName() << "\n";
+        std::cout << file->m_Name.GetName() << " (" << file->m_Size << " Bytes)\n";
 
         delete file;
     }
@@ -1597,7 +1801,7 @@ namespace VirtualComputer::Commands
         bool running = true;
         while (running)
         {
-            //PrintDrive(true);
+            PrintDrive(true);
             
             // Get Command
             std::string command;
