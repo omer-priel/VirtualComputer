@@ -2114,6 +2114,11 @@ namespace VirtualComputer::Commands
         return Commands::DoCommand(command, commandParts);
     }
 
+    static bool DoCommand(std::string&& command)
+    {
+        return Commands::DoCommand(command);
+    }
+
 #ifdef _DEBUG
     static void PrintFile(int tabs, unsigned int chankIndex)
     {
@@ -2200,8 +2205,6 @@ namespace VirtualComputer::Commands
             User::GetCommand(command);
             
             // Do command
-           
-
             running = Commands::DoCommand(command);
         }
     }

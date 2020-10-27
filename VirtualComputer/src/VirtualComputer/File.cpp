@@ -293,15 +293,13 @@ namespace VirtualComputer
 
     void File::Write(unsigned int index, const std::string& text)
     {
-        Logger::Debug("Write(", index, ", \"", text, "\")");
-
         if (index + text.size() > m_Size) // Need to resize
         {
             Resize(index + text.size());
         }
 
+        // Write text
         unsigned int writedSize = 0;
-
         if (index <= FIRST_FILE_BODY_SIZE)
         {
             m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + 4 + index);
@@ -337,14 +335,15 @@ namespace VirtualComputer
                 writedSize += text.size();
                 memcpy(chank->Body + start, text.c_str(), text.size());
                 m_Drive->m_FileStream.Write(text.c_str(), text.size());
+                index += text.size();
             }
             else
             {
                 writedSize += (CHANK_SIZE - 4) - start;
                 memcpy(chank->Body + start, text.c_str(), (CHANK_SIZE - 4) - start);
                 m_Drive->m_FileStream.Write(text.c_str(), (CHANK_SIZE - 4) - start);
+                index += (CHANK_SIZE - 4) - start;
             }
-            index += (CHANK_SIZE - 4);
         }
     }
 }
