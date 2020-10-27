@@ -294,5 +294,57 @@ namespace VirtualComputer
     void File::Write(unsigned int index, const std::string& text)
     {
         Logger::Debug("Write(", index, ", \"", text, "\")");
+
+        if (index + text.size() > m_Size) // Need to resize
+        {
+            Resize(index + text.size());
+        }
+
+        unsigned int writedSize = 0;
+
+        if (index <= FIRST_FILE_BODY_SIZE)
+        {
+            m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + 4 + index);
+
+            if (text.size() < FIRST_FILE_BODY_SIZE - index)
+            {
+                writedSize = text.size();
+            }
+            else
+            {
+                writedSize = FIRST_FILE_BODY_SIZE - index;
+            }
+            memcpy(m_FirstBodyChank + index, text.c_str(), writedSize);
+            m_Drive->m_FileStream.Write(text.c_str(), writedSize);
+
+            index = 0;
+        }
+        else
+        {
+            index -= FIRST_FILE_BODY_SIZE;
+        }
+
+        unsigned int i = index / (CHANK_SIZE - 4);
+        while (writedSize < text.size())
+        {
+            auto& chank = m_BodyChanks[index / (CHANK_SIZE - 4)];
+            unsigned int start = index % (CHANK_SIZE - 4);
+
+            m_Drive->GoToChank(chank->ChankIndex, start);
+
+            if (text.size() - writedSize < (CHANK_SIZE - 4) - start)
+            {
+                writedSize += text.size();
+                memcpy(chank->Body + start, text.c_str(), text.size());
+                m_Drive->m_FileStream.Write(text.c_str(), text.size());
+            }
+            else
+            {
+                writedSize += (CHANK_SIZE - 4) - start;
+                memcpy(chank->Body + start, text.c_str(), (CHANK_SIZE - 4) - start);
+                m_Drive->m_FileStream.Write(text.c_str(), (CHANK_SIZE - 4) - start);
+            }
+            index += (CHANK_SIZE - 4);
+        }
     }
 }

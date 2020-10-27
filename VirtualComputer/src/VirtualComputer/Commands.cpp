@@ -2031,6 +2031,89 @@ namespace VirtualComputer::Commands
         return true;
     }
 
+    static bool DoCommand(std::string& command)
+    {
+        if (command.size() > MAX_COMMAND_SIZE)
+        {
+            std::cout << "The cammand can't be bigger then " << MAX_COMMAND_SIZE << "!\n";
+            return true;
+        }
+
+        std::vector<std::string> commandParts;
+
+        char commandPart[MAX_COMMAND_SIZE];
+        int partIndex = 0;
+        bool inString = false;
+
+        for (char tv : command)
+        {
+            if (inString)
+            {
+                if (tv == '\"')
+                {
+                    inString = false;
+                }
+                else
+                {
+                    commandPart[partIndex] = tv;
+                    partIndex++;
+                }
+            }
+            else
+            {
+                if (tv == '\"')
+                {
+                    inString = true;
+                }
+                else if (tv == ' ' || tv == '\t')
+                {
+                    if (partIndex == 0)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        commandPart[partIndex] = 0;
+                        commandParts.emplace_back(commandPart);
+
+                        partIndex = 0;
+                        continue;
+                    }
+                }
+                else
+                {
+                    commandPart[partIndex] = tv;
+                    partIndex++;
+                }
+            }
+        }
+
+        if (inString)
+        {
+            std::cout << "Command syntex error!\n";
+            return true;
+        }
+
+        if (partIndex != 0)
+        {
+            commandPart[partIndex] = 0;
+            commandParts.emplace_back(commandPart);
+        }
+
+        if (commandParts.empty())
+        {
+            return true;
+        }
+
+        // make command lower ("ECHO" to "echo")
+        for (auto& tv : commandParts[0])
+        {
+            tv = std::tolower(tv);
+        }
+
+        return Commands::DoCommand(command, commandParts);
+    }
+
 #ifdef _DEBUG
     static void PrintFile(int tabs, unsigned int chankIndex)
     {
@@ -2117,85 +2200,9 @@ namespace VirtualComputer::Commands
             User::GetCommand(command);
             
             // Do command
-            if (command.size() > MAX_COMMAND_SIZE)
-            {
-                Logger::Error("The cammand can't be bigger then ", MAX_COMMAND_SIZE, "!");
-                continue;
-            }
+           
 
-            std::vector<std::string> commandParts;
-
-            char commandPart[MAX_COMMAND_SIZE];
-            int partIndex = 0;
-            bool inString = false;
-
-            for (char tv : command)
-            {
-                if (inString)
-                {
-                    if (tv == '\"')
-                    {
-                        inString = false;
-                    }
-                    else
-                    {
-                        commandPart[partIndex] = tv;
-                        partIndex++;
-                    }
-                }
-                else
-                {
-                    if (tv == '\"')
-                    {
-                        inString = true;
-                    }
-                    else if (tv == ' ' || tv == '\t')
-                    {
-                        if (partIndex == 0)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            commandPart[partIndex] = 0;
-                            commandParts.emplace_back(commandPart);
-
-                            partIndex = 0;
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        commandPart[partIndex] = tv;
-                        partIndex++;
-                    }
-                }
-            }
-
-            if (inString)
-            {
-                Logger::Error("Command syntex error!");
-                continue;
-            }
-
-            if (partIndex != 0)
-            {
-                commandPart[partIndex] = 0;
-                commandParts.emplace_back(commandPart);
-            }
-
-            if (commandParts.empty())
-            {
-                continue;
-            }
-
-            // make command lower ("ECHO" to "echo")
-            for (auto& tv : commandParts[0])
-            {
-                tv = std::tolower(tv);
-            }
-
-            running = Commands::DoCommand(command, commandParts);
+            running = Commands::DoCommand(command);
         }
     }
 
