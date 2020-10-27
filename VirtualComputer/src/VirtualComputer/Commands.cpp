@@ -137,6 +137,8 @@ namespace VirtualComputer::Commands
         File = 2
     };
 
+    typedef void (HelpEvent)();
+
     // Utils functions
     static bool GetDrive(std::string& path, Drive*& drive)
     {
@@ -490,6 +492,286 @@ namespace VirtualComputer::Commands
         return true;
     }
 
+    static void CreateSubDirectory(const std::string_view& name, unsigned int& chankIndex, Drive* drive, bool middleDirectory)
+    {
+        drive->GoToChank(chankIndex);
+
+        drive->m_FileStream.Write(&name[0], name.size());
+        if (name.size() < MAX_ENTITY_NAME)
+        {
+            drive->m_FileStream.Write<unsigned char>(0);
+            drive->m_FileStream += MAX_ENTITY_NAME - 1 - name.size();
+        }
+
+        if (middleDirectory)
+        {
+            drive->m_FileStream.Write<unsigned char>(1);
+
+            chankIndex = drive->GenerateChank();
+
+            Logger::Info("Generate Chank ", chankIndex, " for Directory");
+
+            drive->m_FileStream.Write(chankIndex);
+        }
+        else
+        {
+            drive->m_FileStream.Write<unsigned char>(0);
+            drive->m_FileStream.Write<unsigned int>(0);
+        }
+
+        std::array<char, (MAX_DIRECTORIES - 1) * 4> data1;
+        drive->m_FileStream.Write(&data1[0], data1.size());
+
+        drive->m_FileStream.Write<unsigned char>(0);
+
+        std::array<char, MAX_FILES * 4> data2;
+        drive->m_FileStream.Write(&data2[0], data2.size());
+    }
+
+    static bool CreateDirectory(std::string& path, bool cantBeExist, HelpEvent& help, Drive*& drive, unsigned int& chankIndex)
+    {
+        drive = nullptr;
+        chankIndex = 0;
+        std::vector<unsigned int> pathInChanks;
+
+        int i = 0;
+
+        // Get Drive
+        if (GetDrive(path, drive))
+        {
+            if (path.size() >= 2 && path[1] == ':')
+            {
+                i = 3;
+            }
+        }
+        else
+        {
+            help();
+            return false;
+        }
+
+        if (drive == nullptr) // Start from current directory
+        {
+            drive = Drive::s_DriveCurrent;
+
+            for (PathItem& item : User::s_CurrentDirectory.path)
+            {
+                pathInChanks.push_back(item.m_chankIndex);
+            }
+
+            chankIndex = User::s_CurrentDirectory.GetBody()->m_ChankIndex;
+        }
+
+        // Get path
+        std::string_view pathView(path);
+
+        bool exist = true;
+        std::string_view firstToCreate;
+        std::vector<std::string_view> neadToCreate;
+
+        unsigned int startNameIndex = i;
+        while (i < path.size())
+        {
+            char tv = path[i];
+            if ((path[i] == '/' || path[i] == '\\') || (i == path.size() - 1))
+            {
+                std::string_view name;
+                if (path[i] == '/' || path[i] == '\\')
+                {
+                    name = pathView.substr(startNameIndex, i - startNameIndex);
+
+                    if (name.empty()) // can't be empty
+                    {
+                        help();
+                        return false;
+                    }
+                }
+                else // last name
+                {
+                    name = pathView.substr(startNameIndex, i - startNameIndex + 1);
+                    if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n') // cheak last char
+                    {
+                        help();
+                        return false;
+                    }
+                }
+
+                if (name.size() > MAX_ENTITY_NAME)
+                {
+                    help();
+                    return false;
+                }
+
+                if (!name.compare(".")) // Do nothing
+                {
+                    if (!exist)
+                    {
+                        help();
+                        return false;
+                    }
+                }
+                else if (!name.compare("..")) // Back
+                {
+                    if (!exist)
+                    {
+                        help();
+                        return false;
+                    }
+
+                    if (pathInChanks.empty())
+                    {
+                        help();
+                        return false;
+                    }
+
+                    pathInChanks.pop_back();
+                    if (pathInChanks.empty())
+                    {
+                        chankIndex = 0;
+                    }
+                    else
+                    {
+                        chankIndex = pathInChanks[pathInChanks.size() - 1];
+                    }
+                }
+                else // Into sub directory or need to be created
+                {
+                    if (exist) //Into sub directory
+                    {
+                        if (chankIndex == 0)
+                        {
+                            drive->GoToChank(chankIndex);
+                        }
+                        else
+                        {
+                            drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
+                        }
+
+                        unsigned char count = drive->m_FileStream.Read<unsigned char>();
+
+                        bool found = false;
+                        for (unsigned char j = 0; j < count; j++)
+                        {
+                            unsigned int chankIndexCheak = drive->m_FileStream.Read<unsigned int>();
+                            size_t index = drive->m_FileStream.GetIndex();
+                            drive->GoToChank(chankIndexCheak);
+
+                            char* checkName = SmartEntityName().GetName(drive->m_FileStream);
+                            found = SmartEntityName::IsEqual(path.c_str() + startNameIndex, checkName, name.size(), strlen(checkName));
+
+                            if (found)
+                            {
+                                chankIndex = chankIndexCheak;
+                                pathInChanks.push_back(chankIndex);
+                                break;
+                            }
+
+                            drive->m_FileStream.ChangeIndex(index);
+                        }
+
+                        if (!found)
+                        {
+                            firstToCreate = name;
+                            exist = false;
+                        }
+                    }
+                    else
+                    {
+                        neadToCreate.push_back(name);
+                    }
+                }
+
+                i++;
+                startNameIndex = i;
+            }
+            else if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n')
+            {
+                help();
+                return false;
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+        // Create Directory
+        if (exist)
+        {
+            if (cantBeExist)
+            {
+                std::cout << "The directory already exist.\n";
+                return false;
+            }
+            return true;
+        }
+
+        const char* error;
+        bool isCurrentDirectory = (drive == Drive::s_DriveCurrent && chankIndex == User::s_CurrentDirectory.GetBody()->m_ChankIndex);
+
+        EntityName name;
+        memcpy(&name, &firstToCreate[0], firstToCreate.size());
+        name[firstToCreate.size()] = 0;
+        if (chankIndex == 0)
+        {
+            chankIndex = drive->CreateDirectory(name, error);
+
+            if (chankIndex == 0)
+            {
+                std::cout << error << "\n";
+                return false;
+            }
+        }
+        else
+        {
+            if (isCurrentDirectory)
+            {
+                chankIndex = User::s_CurrentDirectory.directory->CreateDirectory(name, error);
+
+                if (chankIndex == 0)
+                {
+                    std::cout << error << "\n";
+                    return false;
+                }
+            }
+            else
+            {
+                Directory directory(chankIndex, drive);
+                chankIndex = directory.CreateDirectory(name, error);
+
+                if (chankIndex == -1)
+                {
+                    std::cout << error << "\n";
+                    return false;
+                }
+            }
+        }
+
+        if (!neadToCreate.empty())
+        {
+            std::string_view lastToCreate = neadToCreate[neadToCreate.size() - 1];
+            neadToCreate.pop_back();
+
+            CreateSubDirectory(firstToCreate, chankIndex, drive, true);
+
+            for (const std::string_view& name : neadToCreate)
+            {
+                CreateSubDirectory(name, chankIndex, drive, true);
+            }
+
+            CreateSubDirectory(lastToCreate, chankIndex, drive, false);
+        }
+
+        return true;
+    }
+
+    static bool CreateDirectory(std::string& path, bool cantBeExist, HelpEvent& help)
+    {
+        Drive* drive;
+        unsigned int chankIndex;
+        return CreateDirectory(path, cantBeExist, help, drive, chankIndex);
+    }
+
     // help
     static void Help()
     {
@@ -577,6 +859,26 @@ namespace VirtualComputer::Commands
             << "\n"
             << "    rd [path] - Delete file.\n"
             << "        path - Path of the file\n";
+    }
+
+    static void HelpMove()
+    {
+        std::cout
+            << "Move directory or file to other directory.\n"
+            << "\n"
+            << "    move [path] [target] - Move directory or file to other directory.\n"
+            << "        path - Path of directory or file\n"
+            << "        target - Path of the target directory\n";
+    }
+
+    static void HelpCopy()
+    {
+        std::cout
+            << "Copy directory or file to other directory.\n"
+            << "\n"
+            << "    move [path] [target] - Copy directory or file to other directory.\n"
+            << "        path - Path of directory or file\n"
+            << "        target - Path of the target directory\n";
     }
 
     static void HelpRename()
@@ -795,276 +1097,11 @@ namespace VirtualComputer::Commands
         }
     }
 
-    static void CommandMd_SubDir(const std::string_view& name, unsigned int& chankIndex, Drive* drive, bool middleDirectory)
-    {
-        drive->GoToChank(chankIndex);
-
-        drive->m_FileStream.Write(&name[0], name.size());
-        if (name.size() < MAX_ENTITY_NAME)
-        {
-            drive->m_FileStream.Write<unsigned char>(0);
-            drive->m_FileStream += MAX_ENTITY_NAME - 1 - name.size();
-        }
-
-        if (middleDirectory)
-        {
-            drive->m_FileStream.Write<unsigned char>(1);
-
-            chankIndex = drive->GenerateChank();
-
-            Logger::Info("Generate Chank ", chankIndex, " for Directory");
-
-            drive->m_FileStream.Write(chankIndex);
-        }
-        else
-        {
-            drive->m_FileStream.Write<unsigned char>(0);
-            drive->m_FileStream.Write<unsigned int>(0);
-        }
-
-        std::array<char, (MAX_DIRECTORIES - 1) * 4> data1;
-        drive->m_FileStream.Write(&data1[0], data1.size());
-        
-        drive->m_FileStream.Write<unsigned char>(0);
-
-        std::array<char, MAX_FILES * 4> data2;
-        drive->m_FileStream.Write(&data2[0], data2.size());
-    }
-
     static void CommandMd(std::string& command, std::vector<std::string>& commandParts)
     {
         if (commandParts.size() == 2)
         {
-            Drive* drive;
-            unsigned int chankIndex = 0;
-            std::vector<unsigned int> pathInChanks;
-
-            std::string& path = commandParts[1];
-
-            int i = 0;
-
-            // Get Drive
-            if (GetDrive(path, drive))
-            {
-                if (path.size() >= 2 && path[1] == ':')
-                {
-                    i = 3;
-                }
-            }
-            else
-            {
-                HelpMd();
-                return;
-            }
-
-            if (drive == nullptr) // Start from current directory
-            {
-                drive = Drive::s_DriveCurrent;
-
-                for (PathItem& item : User::s_CurrentDirectory.path)
-                {
-                    pathInChanks.push_back(item.m_chankIndex);
-                }
-
-                chankIndex = User::s_CurrentDirectory.GetBody()->m_ChankIndex;
-            }
-
-            // Get path
-            std::string_view pathView(path);
-
-            bool exist = true;
-            std::string_view firstToCreate;
-            std::vector<std::string_view> neadToCreate;
-                        
-            unsigned int startNameIndex = i;
-            while (i < path.size())
-            {
-                char tv = path[i];
-                if ((path[i] == '/' || path[i] == '\\') || (i == path.size() - 1))
-                {
-                    std::string_view name;
-                    if (path[i] == '/' || path[i] == '\\')
-                    {
-                        name = pathView.substr(startNameIndex, i - startNameIndex);
-
-                        if (name.empty()) // can't be empty
-                        {
-                            HelpMd();
-                            return;
-                        }
-                    }
-                    else // last name
-                    {
-                        name = pathView.substr(startNameIndex, i - startNameIndex + 1);
-                        if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n') // cheak last char
-                        {
-                            HelpMd();
-                            return;
-                        }
-                    }
-
-                    if (name.size() > MAX_ENTITY_NAME)
-                    {
-                        HelpMd();
-                        return;
-                    }
-
-                    if (!name.compare(".")) // Do nothing
-                    {
-                        if (!exist)
-                        {
-                            HelpMd();
-                            return;
-                        }
-                    }
-                    else if (!name.compare("..")) // Back
-                    {
-                        if (!exist)
-                        {
-                            HelpMd();
-                            return;
-                        }
-
-                        if (pathInChanks.empty())
-                        {
-                            HelpMd();
-                            return;
-                        }
-                        
-                        pathInChanks.pop_back();
-                        if (pathInChanks.empty())
-                        {
-                            chankIndex = 0;
-                        }
-                        else
-                        {
-                            chankIndex = pathInChanks[pathInChanks.size() - 1];
-                        }
-                    }
-                    else // Into sub directory or need to be created
-                    {
-                        if (exist) //Into sub directory
-                        {
-                            if (chankIndex == 0)
-                            {
-                                drive->GoToChank(chankIndex);
-                            }
-                            else
-                            {
-                                drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
-                            }
-
-                            unsigned char count = drive->m_FileStream.Read<unsigned char>();
-
-                            bool found = false;
-                            for (unsigned char j = 0; j < count; j++)
-                            {
-                                unsigned int chankIndexCheak = drive->m_FileStream.Read<unsigned int>();
-                                size_t index = drive->m_FileStream.GetIndex();
-                                drive->GoToChank(chankIndexCheak);
-
-                                char* checkName = SmartEntityName().GetName(drive->m_FileStream);
-                                found = SmartEntityName::IsEqual(path.c_str() + startNameIndex, checkName, name.size(), strlen(checkName));
-
-                                if (found)
-                                {
-                                    chankIndex = chankIndexCheak;
-                                    pathInChanks.push_back(chankIndex);
-                                    break;
-                                }
-
-                                drive->m_FileStream.ChangeIndex(index);
-                            }
-
-                            if (!found)
-                            {
-                                firstToCreate = name;
-                                exist = false;
-                            }
-                        }
-                        else
-                        {
-                            neadToCreate.push_back(name);
-                        }
-                    }
-
-                    i++;
-                    startNameIndex = i;
-                }
-                else if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n')
-                {
-                    HelpMd();
-                    return;
-                }
-                else
-                {
-                    i++;
-                }
-            }
-
-            // Create Directory
-            if (exist)
-            {
-                std::cout << "The directory already exist.\n";
-            }
-            else
-            {
-                const char* error;
-                bool isCurrentDirectory = (drive == Drive::s_DriveCurrent && chankIndex == User::s_CurrentDirectory.GetBody()->m_ChankIndex);
-                
-                EntityName name;
-                memcpy(&name, &firstToCreate[0], firstToCreate.size());
-                name[firstToCreate.size()] = 0;
-                if (chankIndex == 0)
-                {
-                    chankIndex = drive->CreateDirectory(name, error);
-
-                    if (chankIndex == 0)
-                    {
-                        std::cout << error << "\n";
-                        return;
-                    }
-                }
-                else
-                {
-                    if (isCurrentDirectory)
-                    {
-                        chankIndex = User::s_CurrentDirectory.directory->CreateDirectory(name, error);
-
-                        if (chankIndex == 0)
-                        {
-                            std::cout << error << "\n";
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        Directory directory(chankIndex, drive);
-                        chankIndex = directory.CreateDirectory(name, error);
-
-                        if (chankIndex == -1)
-                        {
-                            std::cout << error << "\n";
-                            return;
-                        }
-                    }
-                }
-
-                if (!neadToCreate.empty())
-                {
-                    std::string_view lastToCreate = neadToCreate[neadToCreate.size() - 1];
-                    neadToCreate.pop_back();
-
-                    CommandMd_SubDir(firstToCreate, chankIndex, drive, true);
-
-                    for (const std::string_view& name : neadToCreate)
-                    {
-                        CommandMd_SubDir(name, chankIndex, drive, true);
-                    }
-
-                    CommandMd_SubDir(lastToCreate, chankIndex, drive, false);
-                }
-            }
+            CreateDirectory(commandParts[1], true, HelpMd);
         }
         else
         {
@@ -1543,14 +1580,14 @@ namespace VirtualComputer::Commands
                     std::string_view& lastDirectory = neadToCreate[neadToCreate.size() - 1];
                     neadToCreate.pop_back();
 
-                    CommandMd_SubDir(firstToCreate, chankIndex, drive, true);
+                    CreateSubDirectory(firstToCreate, chankIndex, drive, true);
 
                     for (const std::string_view& name : neadToCreate)
                     {
-                        CommandMd_SubDir(name, chankIndex, drive, true);
+                        CreateSubDirectory(name, chankIndex, drive, true);
                     }
 
-                    CommandMd_SubDir(lastDirectory, chankIndex, drive, false);
+                    CreateSubDirectory(lastDirectory, chankIndex, drive, false);
                 }
 
                 isCurrentDirectory = false;
@@ -1615,6 +1652,78 @@ namespace VirtualComputer::Commands
         }
     }
 
+    static void CommandMove(std::string& command, std::vector<std::string>& commandParts)
+    {
+        if (commandParts.size() == 3)
+        {
+            std::string& path = commandParts[1];
+            std::string& target = commandParts[2];
+
+            Drive* driveFrom;
+            unsigned int chankIndexFrom;
+            std::vector<unsigned int> pathInChanks;
+            std::optional<unsigned char> entityIndex;
+
+            EntityType type = GetEntity(path, driveFrom, chankIndexFrom, pathInChanks, entityIndex);
+            if (type != EntityType::NotExists)
+            {
+                if (pathInChanks.empty())
+                {
+                    std::cout << "Can't move drive.\n";
+                    return;
+                }
+
+                if (pathInChanks.size() == 1)
+                {
+                    chankIndexFrom = 0;
+                }
+                else
+                {
+                    chankIndexFrom = pathInChanks.back();
+                }
+
+                // md target
+                Drive* driveTo;
+                unsigned int chankIndexTo;
+                if (CreateDirectory(target, false, HelpMove, driveTo, chankIndexTo))
+                {
+                    if (driveFrom != driveTo)
+                    {
+                        // TODO
+                        // Copy to other drive
+                        // Delete from drive
+                    }
+                    else
+                    {
+                        if (entityIndex.has_value())
+                        {
+                            Logger::Debug(driveFrom->m_DriveName, " ", chankIndexFrom, " ", (unsigned int)entityIndex.value());
+                        }
+                        else
+                        {
+                            Logger::Debug(driveFrom->m_DriveName, " ", chankIndexFrom, " ", "?");
+                        }
+                        Logger::Debug(driveTo->m_DriveName, " ", chankIndexTo);
+                    }
+                }
+            }
+            else
+            {
+                std::cout << "The directory or file \"" << path << "\" not found.\n";
+                return;
+            }
+        }
+        else
+        {
+            HelpMove();
+        }
+    }
+
+    static void CommandCopy(std::string& command, std::vector<std::string>& commandParts)
+    {
+        // TODO
+    }
+
     static void CommandRename_Rename(Drive*& drive, std::vector<unsigned int>& pathInChanks,
         EntityType& type, std::optional<unsigned char>& entityIndex, unsigned int chankIndex, EntityName& newName)
     {
@@ -1622,12 +1731,7 @@ namespace VirtualComputer::Commands
 
         if (type == EntityType::Directory) // Directory
         {
-            if (pathInChanks.empty()) // Entity is Drive
-            {
-                std::cout << "Can't rename drive.\n";
-                return;
-            }
-            else if (pathInChanks.size() == 1) // In drive
+            if (pathInChanks.size() == 1) // In drive
             {
                 drive->RenameDirectory(entityIndex, chankIndex, newName, error);
             }
@@ -1695,11 +1799,17 @@ namespace VirtualComputer::Commands
             DirectoryBody* directory;
             Drive* drive;
             unsigned int chankIndex;
-            std::optional<unsigned char> entityIndex;
             std::vector<unsigned int> pathInChanks;
+            std::optional<unsigned char> entityIndex;
             EntityType type = GetEntity(commandParts[1], drive, chankIndex, pathInChanks, entityIndex);
             if (type != EntityType::NotExists)
             {
+                if (pathInChanks.empty())
+                {
+                    std::cout << "Can't rename drive.\n";
+                    return;
+                }
+
                 // Rename Entity
                 CommandRename_Rename(drive, pathInChanks, type, entityIndex, chankIndex, newName);
                 
@@ -1956,11 +2066,25 @@ namespace VirtualComputer::Commands
         }
         else if (!action.compare("move"))
         {
-
+            if (helpMode)
+            {
+                HelpMove();
+            }
+            else
+            {
+                CommandMove(command, commandParts);
+            }
         }
         else if (!action.compare("copy"))
         {
-
+        if (helpMode)
+        {
+            HelpCopy();
+        }
+        else
+        {
+            CommandMove(command, commandParts);
+        }
         }
         else if (!action.compare("rename"))
         {
@@ -2191,6 +2315,14 @@ namespace VirtualComputer::Commands
     void Load()
     {
         User::s_CurrentDirectory.Change();
+
+        DoCommand("md a/b/dir");
+        DoCommand("mf a/b/file");
+        DoCommand("md a/dir");
+        DoCommand("mf a/file");
+        DoCommand("md dir");
+        DoCommand("mf file");
+        DoCommand("clear");
     }
 
     void Loop()
