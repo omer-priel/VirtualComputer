@@ -388,7 +388,7 @@ namespace VirtualComputer::Commands
                         }
                         else
                         {
-                            chankIndex = pathInChanks[pathInChanks.size() - 1];
+                            chankIndex = pathInChanks.back();
                         }
                     }
                 }
@@ -443,6 +443,7 @@ namespace VirtualComputer::Commands
                             if (found)
                             {
                                 entityIndex.emplace(j);
+                                pathInChanks.push_back(chankIndex);
                                 return EntityType::File;
                             }
 
@@ -1622,13 +1623,13 @@ namespace VirtualComputer::Commands
             std::vector<unsigned int> pathInChanks;
             if (GetEntity(commandParts[1], drive, chankIndex, pathInChanks, fileIndex) == EntityType::File)
             {
-                if (pathInChanks.empty()) // In drive
+                if (pathInChanks.size() == 1) // In drive
                 {
                     drive->DeleteFile(fileIndex.value());
                 }
                 else // In Directory
                 {
-                    chankIndex = pathInChanks[pathInChanks.size() - 1];
+                    chankIndex = pathInChanks[pathInChanks.size() - 2];
                     if (drive == Drive::s_DriveCurrent && chankIndex == User::s_CurrentDirectory.GetBody()->m_ChankIndex)
                     {
                         User::s_CurrentDirectory.directory->DeleteFile(fileIndex.value());
@@ -1679,7 +1680,7 @@ namespace VirtualComputer::Commands
                 }
                 else
                 {
-                    chankIndexFrom = pathInChanks.back();
+                    chankIndexFrom = pathInChanks[pathInChanks.size() - 2];
                 }
 
                 // md target
@@ -1695,14 +1696,7 @@ namespace VirtualComputer::Commands
                     }
                     else
                     {
-                        if (entityIndex.has_value())
-                        {
-                            Logger::Debug(driveFrom->m_DriveName, " ", chankIndexFrom, " ", (unsigned int)entityIndex.value());
-                        }
-                        else
-                        {
-                            Logger::Debug(driveFrom->m_DriveName, " ", chankIndexFrom, " ", "?");
-                        }
+                        Logger::Debug(driveFrom->m_DriveName, " ", chankIndexFrom, " ", entityIndex);
                         Logger::Debug(driveTo->m_DriveName, " ", chankIndexTo);
                     }
                 }
@@ -1751,13 +1745,13 @@ namespace VirtualComputer::Commands
         }
         else // File
         {
-            if (pathInChanks.empty()) // In drive
+            if (pathInChanks.size() == 1) // In drive
             {
                 drive->RenameFile(entityIndex.value(), newName, error);
             }
             else // In directory
             {
-                unsigned int chankIndex = pathInChanks[pathInChanks.size() - 1];
+                unsigned int chankIndex = pathInChanks[pathInChanks.size() - 2];
                 if (drive == Drive::s_DriveCurrent && chankIndex == User::s_CurrentDirectory.GetBody()->m_ChankIndex)
                 {
                     User::s_CurrentDirectory.directory->RenameFile(entityIndex.value(), newName, error);
