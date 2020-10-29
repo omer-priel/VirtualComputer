@@ -1661,7 +1661,8 @@ namespace VirtualComputer::Commands
             std::string& target = commandParts[2];
 
             Drive* driveFrom;
-            unsigned int chankIndexFrom;
+            unsigned int chankIndexFrom; // directory of the entity
+            unsigned int chankIndexEntity; // the entity
             std::vector<unsigned int> pathInChanks;
             std::optional<unsigned char> entityIndex;
 
@@ -1683,6 +1684,20 @@ namespace VirtualComputer::Commands
                     chankIndexFrom = pathInChanks[pathInChanks.size() - 2];
                 }
 
+                chankIndexEntity = pathInChanks[pathInChanks.size() - 1];
+
+                if (driveFrom == Drive::s_DriveCurrent && type == EntityType::Directory)
+                {
+                    for (const auto& directory : User::s_CurrentDirectory.path)
+                    {
+                        if (chankIndexEntity == directory.m_chankIndex)
+                        {
+                            std::cout << "Can't move directory in current path.\n";
+                            return;
+                        }
+                    }
+                }
+
                 // md target
                 Drive* driveTo;
                 unsigned int chankIndexTo;
@@ -1696,7 +1711,14 @@ namespace VirtualComputer::Commands
                     }
                     else
                     {
-                        Logger::Debug(driveFrom->m_DriveName, " ", chankIndexFrom, " ", entityIndex);
+                        if (entityIndex.has_value())
+                        {
+                            Logger::Debug(driveFrom->m_DriveName, " ", chankIndexFrom, " ", entityIndex.value());
+                        }
+                        else
+                        {
+                            Logger::Debug(driveFrom->m_DriveName, " ", chankIndexFrom, " ", "?");
+                        }
                         Logger::Debug(driveTo->m_DriveName, " ", chankIndexTo);
                     }
                 }
