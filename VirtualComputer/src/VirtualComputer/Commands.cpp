@@ -2028,7 +2028,7 @@ namespace VirtualComputer::Commands
                                 }
 
                                 // Remove
-                                if (chankIndexTo == 0)
+                                if (chankIndexFrom == 0)
                                 {
                                     // Remove from Drive
                                     drive->RemoveEntity(type, entityIndexOptional, chankIndexEntity);
@@ -2666,10 +2666,8 @@ namespace VirtualComputer::Commands
     {
         User::s_CurrentDirectory.Change();
 
-        DoCommand("md a/b/dir");
-        DoCommand("mf a/b/file");
-        DoCommand("md a/dir");
-        DoCommand("mf a/file");
+        DoCommand("md a/b/c");
+        DoCommand("md A/B/C");
         DoCommand("md dir");
         DoCommand("mf file");
         DoCommand("clear");
