@@ -11,6 +11,7 @@
     <ClCompile Include="src\VirtualComputer\MemoryEntity.cpp" />
     <ClCompile Include="src\VirtualComputer\SmartEntityName.cpp" />
     <ClCompile Include="src\VirtualComputer\ErrorMessages.cpp" />
+    <ClCompile Include="src\VirtualComputer\EntityType.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h" />
@@ -23,5 +24,6 @@
     <ClInclude Include="src\VirtualComputer\HelpBody.h" />
     <ClInclude Include="src\VirtualComputer\MemoryEntity.h" />
     <ClInclude Include="src\VirtualComputer\ErrorMessages.h" />
+    <ClInclude Include="src\VirtualComputer\EntityType.h" />
   </ItemGroup>
 </Project>

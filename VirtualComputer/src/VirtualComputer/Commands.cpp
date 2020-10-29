@@ -9,6 +9,8 @@
 #include "Drive.h"
 #include "Directory.h"
 #include "File.h"
+#include "EntityType.h"
+#include "ErrorMessages.h"
 
 namespace VirtualComputer::User
 {
@@ -130,13 +132,6 @@ namespace VirtualComputer::User
 namespace VirtualComputer::Commands
 {
     // Subclasses
-    enum class EntityType : unsigned char
-    {
-        NotExists = 0,
-        Directory = 1,
-        File = 2
-    };
-
     typedef void (HelpEvent)();
 
     // Utils functions
@@ -662,6 +657,249 @@ namespace VirtualComputer::Commands
 
                             if (found)
                             {
+                                chankIndex = chankIndexCheak;
+                                pathInChanks.push_back(chankIndex);
+                                break;
+                            }
+
+                            drive->m_FileStream.ChangeIndex(index);
+                        }
+
+                        if (!found)
+                        {
+                            firstToCreate = name;
+                            exist = false;
+                        }
+                    }
+                    else
+                    {
+                        neadToCreate.push_back(name);
+                    }
+                }
+
+                i++;
+                startNameIndex = i;
+            }
+            else if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n')
+            {
+                help();
+                return false;
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+        // Create Directory
+        if (exist)
+        {
+            if (cantBeExist)
+            {
+                std::cout << "The directory already exist.\n";
+                return false;
+            }
+            return true;
+        }
+
+        const char* error;
+        bool isCurrentDirectory = (drive == Drive::s_DriveCurrent && chankIndex == User::s_CurrentDirectory.GetBody()->m_ChankIndex);
+
+        EntityName name;
+        memcpy(&name, &firstToCreate[0], firstToCreate.size());
+        name[firstToCreate.size()] = 0;
+        if (chankIndex == 0)
+        {
+            chankIndex = drive->CreateDirectory(name, error);
+
+            if (chankIndex == 0)
+            {
+                std::cout << error << "\n";
+                return false;
+            }
+        }
+        else
+        {
+            if (isCurrentDirectory)
+            {
+                chankIndex = User::s_CurrentDirectory.directory->CreateDirectory(name, error);
+
+                if (chankIndex == 0)
+                {
+                    std::cout << error << "\n";
+                    return false;
+                }
+            }
+            else
+            {
+                Directory directory(chankIndex, drive);
+                chankIndex = directory.CreateDirectory(name, error);
+
+                if (chankIndex == -1)
+                {
+                    std::cout << error << "\n";
+                    return false;
+                }
+            }
+        }
+
+        if (!neadToCreate.empty())
+        {
+            std::string_view lastToCreate = neadToCreate[neadToCreate.size() - 1];
+            neadToCreate.pop_back();
+
+            CreateSubDirectory(firstToCreate, chankIndex, drive, true);
+
+            for (const std::string_view& name : neadToCreate)
+            {
+                CreateSubDirectory(name, chankIndex, drive, true);
+            }
+
+            CreateSubDirectory(lastToCreate, chankIndex, drive, false);
+        }
+
+        return true;
+    }
+
+    static bool CreateDirectory(std::string& path, bool cantBeExist, Drive* cantBeDrive, unsigned int& cantBeChankIndex, HelpEvent& help, Drive*& drive, unsigned int& chankIndex)
+    {
+        drive = nullptr;
+        chankIndex = 0;
+        std::vector<unsigned int> pathInChanks;
+
+        int i = 0;
+
+        // Get Drive
+        if (GetDrive(path, drive))
+        {
+            if (path.size() >= 2 && path[1] == ':')
+            {
+                i = 3;
+            }
+        }
+        else
+        {
+            help();
+            return false;
+        }
+
+        if (drive == nullptr) // Start from current directory
+        {
+            drive = Drive::s_DriveCurrent;
+
+            for (PathItem& item : User::s_CurrentDirectory.path)
+            {
+                pathInChanks.push_back(item.m_chankIndex);
+            }
+
+            chankIndex = User::s_CurrentDirectory.GetBody()->m_ChankIndex;
+        }
+
+        // Get path
+        std::string_view pathView(path);
+
+        bool exist = true;
+        std::string_view firstToCreate;
+        std::vector<std::string_view> neadToCreate;
+
+        unsigned int startNameIndex = i;
+        while (i < path.size())
+        {
+            char tv = path[i];
+            if ((path[i] == '/' || path[i] == '\\') || (i == path.size() - 1))
+            {
+                std::string_view name;
+                if (path[i] == '/' || path[i] == '\\')
+                {
+                    name = pathView.substr(startNameIndex, i - startNameIndex);
+
+                    if (name.empty()) // can't be empty
+                    {
+                        help();
+                        return false;
+                    }
+                }
+                else // last name
+                {
+                    name = pathView.substr(startNameIndex, i - startNameIndex + 1);
+                    if (path[i] == ':' || path[i] == '\'' || path[i] == '\"' || path[i] == '\n') // cheak last char
+                    {
+                        help();
+                        return false;
+                    }
+                }
+
+                if (name.size() > MAX_ENTITY_NAME)
+                {
+                    help();
+                    return false;
+                }
+
+                if (!name.compare(".")) // Do nothing
+                {
+                    if (!exist)
+                    {
+                        help();
+                        return false;
+                    }
+                }
+                else if (!name.compare("..")) // Back
+                {
+                    if (!exist)
+                    {
+                        help();
+                        return false;
+                    }
+
+                    if (pathInChanks.empty())
+                    {
+                        help();
+                        return false;
+                    }
+
+                    pathInChanks.pop_back();
+                    if (pathInChanks.empty())
+                    {
+                        chankIndex = 0;
+                    }
+                    else
+                    {
+                        chankIndex = pathInChanks[pathInChanks.size() - 1];
+                    }
+                }
+                else // Into sub directory or need to be created
+                {
+                    if (exist) //Into sub directory
+                    {
+                        if (chankIndex == 0)
+                        {
+                            drive->GoToChank(chankIndex);
+                        }
+                        else
+                        {
+                            drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
+                        }
+
+                        unsigned char count = drive->m_FileStream.Read<unsigned char>();
+
+                        bool found = false;
+                        for (unsigned char j = 0; j < count; j++)
+                        {
+                            unsigned int chankIndexCheak = drive->m_FileStream.Read<unsigned int>();
+                            size_t index = drive->m_FileStream.GetIndex();
+                            drive->GoToChank(chankIndexCheak);
+
+                            char* checkName = SmartEntityName().GetName(drive->m_FileStream);
+                            found = SmartEntityName::IsEqual(path.c_str() + startNameIndex, checkName, name.size(), strlen(checkName));
+
+                            if (found)
+                            {
+                                if (cantBeDrive == drive && cantBeChankIndex == chankIndex)
+                                {
+                                    help();
+                                    return false;
+                                }
+
                                 chankIndex = chankIndexCheak;
                                 pathInChanks.push_back(chankIndex);
                                 break;
@@ -1664,9 +1902,9 @@ namespace VirtualComputer::Commands
             unsigned int chankIndexFrom; // directory of the entity
             unsigned int chankIndexEntity; // the entity
             std::vector<unsigned int> pathInChanks;
-            std::optional<unsigned char> entityIndex;
+            std::optional<unsigned char> entityIndexOptional;
 
-            EntityType type = GetEntity(path, driveFrom, chankIndexFrom, pathInChanks, entityIndex);
+            EntityType type = GetEntity(path, driveFrom, chankIndexFrom, pathInChanks, entityIndexOptional);
             if (type != EntityType::NotExists)
             {
                 if (pathInChanks.empty())
@@ -1701,7 +1939,18 @@ namespace VirtualComputer::Commands
                 // md target
                 Drive* driveTo;
                 unsigned int chankIndexTo;
-                if (CreateDirectory(target, false, HelpMove, driveTo, chankIndexTo))
+
+                bool found;
+                if (type == EntityType::Directory)
+                {
+                    found = CreateDirectory(target, false, driveFrom, chankIndexEntity, HelpMove, driveTo, chankIndexTo);
+                }
+                else
+                {
+                    found = CreateDirectory(target, false, HelpMove, driveTo, chankIndexTo);
+                }
+
+                if (found)
                 {
                     if (driveFrom != driveTo)
                     {
@@ -1711,15 +1960,100 @@ namespace VirtualComputer::Commands
                     }
                     else
                     {
-                        if (entityIndex.has_value())
+                        Drive* drive = driveFrom;
+                        if (chankIndexEntity != chankIndexTo)
                         {
-                            Logger::Debug(driveFrom->m_DriveName, " ", chankIndexFrom, " ", entityIndex.value());
+                            if (chankIndexFrom != chankIndexTo)
+                            {
+                                // Add
+                                EntityName entityName;
+                                drive->GoToChank(chankIndexEntity);
+                                drive->m_FileStream.Read(&entityName[0], MAX_ENTITY_NAME);
+                                entityName[MAX_ENTITY_NAME] = 0;
+
+                                if (chankIndexTo == 0)
+                                {
+                                    if (drive->m_DirectoriesCount == MAX_DIRECTORIES)
+                                    {
+                                        std::cout << "The drive " << drive->m_DriveName << ": can't have more then 255 directories!.\n";
+                                        return;
+                                    }
+
+                                    if (drive->ExistName(entityName))
+                                    {
+                                        std::cout << ErrorMessages::NameAlreadyExist << "\n";
+                                        return;
+                                    }
+
+                                    // Add to Drive
+                                    drive->AddEntity(type, chankIndexEntity, entityName);
+                                }
+                                else
+                                {
+                                    if (chankIndexTo == User::s_CurrentDirectory.GetBody()->m_ChankIndex)
+                                    {
+                                        if (User::s_CurrentDirectory.directory->m_DirectoriesCount == MAX_DIRECTORIES)
+                                        {
+                                            std::cout << "The directory \"" << target << "\" can't have more then 255 directories!.\n";
+                                            return;
+                                        }
+
+                                        if (User::s_CurrentDirectory.directory->ExistName(entityName))
+                                        {
+                                            std::cout << ErrorMessages::NameAlreadyExist << "\n";
+                                            return;
+                                        }
+
+                                        // Add to Current Directory
+                                        User::s_CurrentDirectory.directory->AddEntity(type, chankIndexEntity, entityName);
+                                    }
+                                    else
+                                    {
+                                        Directory directoryTo(chankIndexTo, drive);
+                                        if (directoryTo.m_DirectoriesCount == MAX_DIRECTORIES)
+                                        {
+                                            std::cout << "The directory \"" << target << "\" can't have more then 255 directories!.\n";
+                                            return;
+                                        }
+
+                                        if (directoryTo.ExistName(entityName))
+                                        {
+                                            std::cout << ErrorMessages::NameAlreadyExist << "\n";
+                                            return;
+                                        }
+
+                                        // Add to Directory
+                                        directoryTo.AddEntity(type, chankIndexEntity, entityName);
+                                    }
+                                }
+
+                                // Remove
+                                if (chankIndexTo == 0)
+                                {
+                                    // Remove from Drive
+                                    drive->RemoveEntity(type, entityIndexOptional, chankIndexEntity);
+                                }
+                                else
+                                {
+                                    if (chankIndexFrom == User::s_CurrentDirectory.GetBody()->m_ChankIndex)
+                                    {
+                                        // Remove from Current Directory
+                                        User::s_CurrentDirectory.directory->RemoveEntity(type, entityIndexOptional, chankIndexEntity);
+                                    }
+                                    else
+                                    {
+                                        // Remove from Directory
+                                        Directory directoryFrom(chankIndexFrom, drive);
+                                        directoryFrom.RemoveEntity(type, entityIndexOptional, chankIndexEntity);
+                                    }
+                                }
+                            }
                         }
                         else
                         {
-                            Logger::Debug(driveFrom->m_DriveName, " ", chankIndexFrom, " ", "?");
+                            std::cout << "The path can't be same as the target.\n";
+                            return;
                         }
-                        Logger::Debug(driveTo->m_DriveName, " ", chankIndexTo);
                     }
                 }
             }

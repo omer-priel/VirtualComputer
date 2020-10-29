@@ -5,6 +5,7 @@
 #include "Utils/File.h"
 
 #include "DirectoryBody.h"
+#include "EntityType.h"
 
 namespace VirtualComputer
 {
@@ -94,6 +95,8 @@ namespace VirtualComputer
 
 		void LoadBody();
 
+		bool ExistName(const EntityName& name);
+
 		unsigned int CreateDirectory(const EntityName& name, const char*& error);
 
 		void DeleteDirectory(unsigned char directoryIndex);
@@ -105,5 +108,11 @@ namespace VirtualComputer
 		void DeleteFile(unsigned char fileIndex);
 
 		void RenameFile(unsigned char fileIndex, const EntityName& name, const char*& error);
+
+		void AddEntity(const EntityType& type, const unsigned int& chankIndex, const EntityName& name);
+
+		void RemoveEntity(const EntityType& type, const unsigned char& entityIndex);
+
+		void RemoveEntity(const EntityType& type, const std::optional<unsigned char> entityIndexOptional, const unsigned int& chankIndex);
 	};
 }

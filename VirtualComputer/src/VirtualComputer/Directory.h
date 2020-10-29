@@ -30,6 +30,8 @@ namespace VirtualComputer
 
 		void LoadBody();
 
+		bool ExistName(const EntityName& name);
+
 		unsigned int CreateDirectory(const EntityName& name, const char*& error);
 
 		void Delete();
@@ -44,5 +46,11 @@ namespace VirtualComputer
 		void DeleteFile(unsigned char directoryIndex, const bool& first = true);
 
 		void RenameFile(unsigned char fileIndex, const EntityName& name, const char*& error);
+
+		void AddEntity(const EntityType& type, const unsigned int& chankIndex, const EntityName& name);
+
+		void RemoveEntity(const EntityType& type, const unsigned char& entityIndex);
+
+		void RemoveEntity(const EntityType& type, const std::optional<unsigned char> entityIndexOptional, const unsigned int& chankIndex);
 	};
 }
