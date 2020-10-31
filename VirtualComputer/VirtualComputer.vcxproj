@@ -163,6 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\VirtualComputer\Drive.cpp" />
     <ClCompile Include="src\VirtualComputer\EntityType.cpp" />
     <ClCompile Include="src\VirtualComputer\ErrorMessages.cpp" />
     <ClCompile Include="src\VirtualComputer\Commands.cpp" />
@@ -171,7 +172,7 @@
     <ClCompile Include="src\VirtualComputer\MemoryEntity.cpp" />
     <ClCompile Include="src\VirtualComputer\Directory.cpp" />
     <ClCompile Include="src\VirtualComputer\DirectoryBody.cpp" />
-    <ClCompile Include="src\VirtualComputer\Drive.cpp" />
+    <ClCompile Include="src\VirtualComputer\HardDrive.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -181,6 +182,7 @@
     <ClCompile Include="src\VirtualComputer\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\VirtualComputer\Drive.h" />
     <ClInclude Include="src\VirtualComputer\EntityType.h" />
     <ClInclude Include="src\VirtualComputer\ErrorMessages.h" />
     <ClInclude Include="src\VirtualComputer\Commands.h" />
@@ -190,7 +192,7 @@
     <ClInclude Include="src\VirtualComputer\SmartEntityName.h" />
     <ClInclude Include="src\VirtualComputer\MemoryEntity.h" />
     <ClInclude Include="src\VirtualComputer\DirectoryBody.h" />
-    <ClInclude Include="src\VirtualComputer\Drive.h" />
+    <ClInclude Include="src\VirtualComputer\HardDrive.h" />
     <ClInclude Include="src\pch.h" />
   </ItemGroup>
   <ItemGroup>

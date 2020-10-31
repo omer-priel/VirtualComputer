@@ -6,7 +6,7 @@
 #include <optional>
 
 #include "HelpBody.h"
-#include "Drive.h"
+#include "HardDrive.h"
 #include "Directory.h"
 #include "File.h"
 #include "EntityType.h"
@@ -24,7 +24,7 @@ namespace VirtualComputer::User
 
         void Change()
         {
-            s_StartLine[0] = Drive::s_DriveCurrent->m_DriveName;
+            s_StartLine[0] = HardDrive::s_HardDriveCurrent->m_DriveName;
             s_StartLine[1] = ':';
             s_StartLine[2] = s_Split;
             size_t i = 3;

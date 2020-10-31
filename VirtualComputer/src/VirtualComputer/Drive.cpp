@@ -30,7 +30,7 @@ namespace VirtualComputer
         std::string drivePath = DIVERS_PATH;
         drivePath += "//drive01";
         drivePath += DIVER_EXTENSION;
-        
+
         size_t numberIndex = strlen(DIVERS_PATH) + 7;
 
         char driveName = 'A';
@@ -126,7 +126,7 @@ namespace VirtualComputer
     char Drive::DeleteDrive(const char* name)
     {
         char index = DriveNameToIndex(name);
-        
+
         if (index == -1)
         {
             std::cout << "Drive name syntex error!\n";
@@ -169,7 +169,7 @@ namespace VirtualComputer
     char Drive::DriveNameToIndex(const char* name)
     {
         size_t size = strlen(name);
-        
+
         if (size == 1 || (size == 2 && name[1] == ':'))
         {
             if ('a' <= name[0] && name[0] <= 'z')
@@ -192,30 +192,6 @@ namespace VirtualComputer
             return 0;
 
         return (CHANK_SIZE * chankIndex) - MAX_ENTITY_NAME;
-    }
-
-    bool Drive::CheakEntityName(const EntityName& name)
-    {
-        if (name.empty())
-        {
-            Logger::Error("The entity name can't be empty!"); // fix: entity need be directory or file.
-            return false;
-        }
-
-        for (char tv : name)
-        {
-            if (tv == 0)
-            {
-                break;
-            }
-            if (tv == ':' || tv == '\\' || tv == '/' || tv == '\'' || tv == '\"' || tv == '\n')
-            {
-                Logger::Error("The tv \'", tv, "\' can't be in entity name!"); // fix: entity need be directory or file.
-                return false;
-            }
-        }
-
-        return true;
     }
 
     // None-Static
