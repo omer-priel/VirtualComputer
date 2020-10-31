@@ -6,7 +6,7 @@
 #include <optional>
 
 #include "HelpBody.h"
-#include "HardDrive.h"
+#include "Drive.h"
 #include "Directory.h"
 #include "File.h"
 #include "EntityType.h"
@@ -24,7 +24,7 @@ namespace VirtualComputer::User
 
         void Change()
         {
-            s_StartLine[0] = HardDrive::s_HardDriveCurrent->m_DriveName;
+            s_StartLine[0] = Drive::s_DriveCurrent->m_DriveName;
             s_StartLine[1] = ':';
             s_StartLine[2] = s_Split;
             size_t i = 3;
@@ -2596,7 +2596,7 @@ namespace VirtualComputer::Commands
 #ifdef _DEBUG
     static void PrintFile(int tabs, unsigned int chankIndex)
     {
-        File* file = new File(chankIndex, Drive::s_DriveCurrent);
+        File* file = new File(chankIndex, Drive::s_DriveCurrent->m_Drive);
 
         for (size_t i = 0; i < tabs; i++)
         {
@@ -2610,7 +2610,7 @@ namespace VirtualComputer::Commands
 
     static void PrintDirectory(int tabs, unsigned int chankIndex, bool displayFiles)
     {
-        Directory* directory = new Directory(chankIndex, Drive::s_DriveCurrent);
+        Directory* directory = new Directory(chankIndex, Drive::s_DriveCurrent->m_Drive);
 
         for (size_t i = 0; i < tabs; i++)
         {

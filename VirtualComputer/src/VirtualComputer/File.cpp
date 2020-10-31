@@ -4,7 +4,7 @@
 namespace VirtualComputer
 {
     // Static
-    unsigned int File::Create(Drive* drive, const EntityName& name, char* content, size_t size)
+    unsigned int File::Create(HardDrive* drive, const EntityName& name, char* content, size_t size)
     {
         unsigned int chankIndex = drive->GenerateChank();
 
@@ -66,7 +66,7 @@ namespace VirtualComputer
         return chankIndex;
     }
 
-    void File::DeleteFile(Drive* drive, unsigned int chankIndex)
+    void File::DeleteFile(HardDrive* drive, unsigned int chankIndex)
     {
         drive->GoToChank(chankIndex, MAX_ENTITY_NAME);
 
@@ -85,7 +85,6 @@ namespace VirtualComputer
             {
                 drive->GoToChank(chankIndex, CHANK_SIZE - 4);
                 drive->DeleteChank(chankIndex);
-                Logger::Info("Delete Chank ", chankIndex);
 
                 if (CHANK_SIZE - 4 > size)
                 {
