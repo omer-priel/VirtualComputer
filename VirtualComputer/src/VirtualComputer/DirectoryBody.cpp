@@ -41,11 +41,11 @@ namespace VirtualComputer
     // Load
     void DirectoryBody::LoadBody()
     {
+        // Laod Directories
         GoToThisChankBody();
 
-        // Laod Directories
         m_DirectoriesCount = m_Drive->m_FileStream.Read<unsigned char>();
-        m_Drive->m_FileStream.Read((char*)m_DirectoriesLocations, MAX_DIRECTORIES);
+        m_Drive->m_FileStream.Read((char*)m_DirectoriesLocations, MAX_DIRECTORIES * 4);
 
         for (unsigned char i = 0; i < m_DirectoriesCount; i++)
         {
@@ -54,10 +54,10 @@ namespace VirtualComputer
         }
 
         // Laod Files
-        m_Drive->m_FileStream += (MAX_DIRECTORIES - m_DirectoriesCount) * 4;
+        GoToThisChankBody(1 + MAX_DIRECTORIES * 4);        
         
         m_FilesCount = m_Drive->m_FileStream.Read<unsigned char>();
-        m_Drive->m_FileStream.Read((char*)m_FilesLocations, MAX_FILES);
+        m_Drive->m_FileStream.Read((char*)m_FilesLocations, MAX_FILES * 4);
 
         for (unsigned char i = 0; i < m_FilesCount; i++)
         {

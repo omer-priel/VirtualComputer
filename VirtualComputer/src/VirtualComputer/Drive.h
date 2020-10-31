@@ -39,10 +39,7 @@ namespace VirtualComputer
 		{
 			if (m_Drive != nullptr)
 			{
-				if (m_Drive->m_FileStream.IsOpened())
-				{
-					m_Drive->m_FileStream.Close();
-				}
+				m_Drive->m_FileStream.Close();
 				delete m_Drive;
 			}
 		}

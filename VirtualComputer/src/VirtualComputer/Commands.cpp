@@ -495,11 +495,13 @@ namespace VirtualComputer::Commands
         }
 
         std::array<char, (MAX_DIRECTORIES - 1) * 4> data1;
+        data1.fill(0);
         drive->m_FileStream.Write(&data1[0], data1.size());
 
         drive->m_FileStream.Write<unsigned char>(0);
 
         std::array<char, MAX_FILES * 4> data2;
+        data2.fill(0);
         drive->m_FileStream.Write(&data2[0], data2.size());
     }
 
@@ -2667,7 +2669,6 @@ namespace VirtualComputer::Commands
         User::s_CurrentDirectory.directory = Drive::s_DriveCurrent;
         User::s_CurrentDirectory.Change();
 
-        return;
         DoCommand("md a/b/c");
         DoCommand("md A/B/C");
         DoCommand("md dir");
@@ -2693,6 +2694,9 @@ namespace VirtualComputer::Commands
 
     void Close()
     {
-        delete User::s_CurrentDirectory.directory;
+        if (User::s_CurrentDirectory.IsDirectory())
+        {
+            delete User::s_CurrentDirectory.directory;
+        }
     }
 };
