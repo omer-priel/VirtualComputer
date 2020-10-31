@@ -996,9 +996,57 @@ namespace VirtualComputer::Commands
         return CreateDirectory(path, cantBeExist, help, drive, chankIndex);
     }
 
-    static bool CopyEntity(Drive*& driveFrom, unsigned int& chankIndexEntity, Drive*&  driveTo, unsigned int&  chankIndexTo)
+    static bool CopyEntity(HardDrive*& driveFrom, unsigned int& chankIndexEntity, EntityType& type, HardDrive*& driveTo, DirectoryBody* target)
     {
-        return true;
+        if (type == EntityType::Directory)
+        {
+            if (target->m_DirectoriesCount == MAX_DIRECTORIES)
+            {
+                std::cout << "The target driectory can't have more then " << MAX_DIRECTORIES << " directories!.\n";
+                return false;
+            }
+        }
+        else // File
+        {
+            if (target->m_FilesCount == MAX_FILES)
+            {
+                std::cout << "The target driectory can't have more then " << MAX_FILES << " files!.\n";
+                return false;
+            }
+        }
+
+        EntityName entityName;
+        driveFrom->GoToChank(chankIndexEntity);
+
+
+        if (target->ExistName(entityName))
+        {
+            std::cout << ErrorMessages::NameAlreadyExist << "\n";
+            return false;
+        }
+
+        // Copy
+        Logger::Debug("COPY ", chankIndexEntity, " to ", target->m_ChankIndex);
+    }
+
+    static bool CopyEntity(Drive*& driveFrom, unsigned int& chankIndexEntity, EntityType& type, Drive*&  driveTo, unsigned int&  chankIndexTo)
+    {
+        if (chankIndexTo == 0)
+        {
+            return CopyEntity(driveFrom->m_Drive, chankIndexEntity, type, driveTo->m_Drive, driveTo);
+        }
+        else
+        {
+            if (driveTo == Drive::s_DriveCurrent && chankIndexTo == User::s_CurrentDirectory.directory->m_ChankIndex)
+            {
+                return CopyEntity(driveFrom->m_Drive, chankIndexEntity, type, driveTo->m_Drive, User::s_CurrentDirectory.directory);
+            }
+            else
+            {
+                Directory directoryTo(chankIndexTo, driveTo->m_Drive);
+                return CopyEntity(driveFrom->m_Drive, chankIndexEntity, type, driveTo->m_Drive, &directoryTo);
+            }
+        }
     }
 
     // help
@@ -2046,7 +2094,7 @@ namespace VirtualComputer::Commands
                 {
                     if (driveFrom != driveTo) // from Drive To Other Drive
                     {
-                        if (CopyEntity(driveFrom, chankIndexEntity, driveTo, chankIndexTo))
+                        if (CopyEntity(driveFrom, chankIndexEntity, type, driveTo, chankIndexTo))
                         {
                             CommandMove_Delete(driveFrom, chankIndexFrom, chankIndexEntity, type, entityIndexOptional);
                         }
@@ -2160,7 +2208,7 @@ namespace VirtualComputer::Commands
                         return;
                     }
 
-                    CopyEntity(driveFrom, chankIndexEntity, driveTo, chankIndexTo);
+                    CopyEntity(driveFrom, chankIndexEntity, type, driveTo, chankIndexTo);
                 }
             }
             else

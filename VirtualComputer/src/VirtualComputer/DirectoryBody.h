@@ -55,7 +55,7 @@ namespace VirtualComputer
 
 		void RemoveEntity(const EntityType& type, const std::optional<unsigned char> entityIndexOptional, const unsigned int& chankIndex);
 
-		void RemoveEntity(const EntityType& type, const unsigned char& entityIndex);
+		void DeleteEntity(const EntityType& type, const unsigned char& entityIndex);
 
 		void DeleteEntity(const EntityType& type, const std::optional<unsigned char> entityIndexOptional, const unsigned int& chankIndex);
 

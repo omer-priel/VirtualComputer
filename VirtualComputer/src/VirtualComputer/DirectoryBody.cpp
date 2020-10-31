@@ -202,7 +202,7 @@ namespace VirtualComputer
         }
     }
 
-    void DirectoryBody::RemoveEntity(const EntityType& type, const unsigned char& entityIndex)
+    void DirectoryBody::DeleteEntity(const EntityType& type, const unsigned char& entityIndex)
     {
         if (type == EntityType::Directory)
         {
