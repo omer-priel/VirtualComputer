@@ -24,7 +24,5 @@ namespace VirtualComputer
 		}
 
 		void GoToThisChankBody(size_t indexInTheChank = 0) override;
-
-		void Delete();
 	};
 }
