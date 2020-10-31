@@ -202,6 +202,52 @@ namespace VirtualComputer
         }
     }
 
+    void DirectoryBody::RemoveEntity(const EntityType& type, const unsigned char& entityIndex)
+    {
+        if (type == EntityType::Directory)
+        {
+            DeleteDirectory(entityIndex);
+        }
+        else // File
+        {
+            DeleteFile(entityIndex);
+        }
+    }
+
+    void DirectoryBody::DeleteEntity(const EntityType& type, const std::optional<unsigned char> entityIndexOptional, const unsigned int& chankIndex)
+    {
+        if (entityIndexOptional.has_value())
+        {
+            DeleteEntity(type, entityIndexOptional.value());
+        }
+        else
+        {
+            unsigned char entityIndex;
+            if (type == EntityType::Directory)
+            {
+                for (unsigned char i = 0; i < m_DirectoriesCount; i++)
+                {
+                    if (m_DirectoriesLocations[i] == chankIndex)
+                    {
+                        DeleteEntity(type, i);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                for (unsigned char i = 0; i < m_FilesCount; i++)
+                {
+                    if (m_FilesLocations[i] == chankIndex)
+                    {
+                        DeleteEntity(type, i);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
     // Directories Actions
     unsigned int DirectoryBody::CreateDirectory(const EntityName& name, const char*& error)
     {

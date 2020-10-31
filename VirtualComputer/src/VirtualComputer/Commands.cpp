@@ -996,6 +996,11 @@ namespace VirtualComputer::Commands
         return CreateDirectory(path, cantBeExist, help, drive, chankIndex);
     }
 
+    static bool CopyEntity(Drive*& driveFrom, unsigned int& chankIndexEntity, Drive*&  driveTo, unsigned int&  chankIndexTo)
+    {
+        return true;
+    }
+
     // help
     static void Help()
     {
@@ -1517,8 +1522,15 @@ namespace VirtualComputer::Commands
             else
             {
                 chankIndex = pathInChanks[pathInChanks.size() - 2];
-                Directory directory(chankIndex, hardDrive);
-                directory.DeleteDirectory(directoryIndex);
+                if (User::s_CurrentDirectory.directory->m_ChankIndex == chankIndex)
+                {
+                    User::s_CurrentDirectory.directory->DeleteDirectory(directoryIndex);
+                }
+                else
+                {
+                    Directory directory(chankIndex, hardDrive);
+                    directory.DeleteDirectory(directoryIndex);
+                }
             }
         }
         else
@@ -1950,6 +1962,27 @@ namespace VirtualComputer::Commands
         return true;
     }
 
+    static void CommandMove_Delete(Drive*& drive, unsigned int& chankIndexFrom, unsigned int& chankIndexEntity,
+        EntityType& type, std::optional<unsigned char>& entityIndexOptional)
+    {
+        if (chankIndexFrom == 0)
+        {
+            drive->DeleteEntity(type, entityIndexOptional, chankIndexEntity);
+        }
+        else // In Directory
+        {
+            if (drive == Drive::s_DriveCurrent && chankIndexFrom == User::s_CurrentDirectory.directory->m_ChankIndex)
+            {
+                User::s_CurrentDirectory.directory->DeleteEntity(type, entityIndexOptional, chankIndexEntity);
+            }
+            else
+            {
+                Directory directory = Directory(chankIndexFrom, drive->m_Drive);
+                directory.DeleteEntity(type, entityIndexOptional, chankIndexEntity);
+            }
+        }
+    }
+
     static void CommandMove(std::string& command, std::vector<std::string>& commandParts)
     {
         if (commandParts.size() == 3)
@@ -2011,11 +2044,12 @@ namespace VirtualComputer::Commands
 
                 if (found)
                 {
-                    if (driveFrom != driveTo)
+                    if (driveFrom != driveTo) // from Drive To Other Drive
                     {
-                        // TODO
-                        // Copy to other drive
-                        // Delete from drive
+                        if (CopyEntity(driveFrom, chankIndexEntity, driveTo, chankIndexTo))
+                        {
+                            CommandMove_Delete(driveFrom, chankIndexFrom, chankIndexEntity, type, entityIndexOptional);
+                        }
                     }
                     else
                     {
@@ -2073,8 +2107,73 @@ namespace VirtualComputer::Commands
 
     static void CommandCopy(std::string& command, std::vector<std::string>& commandParts)
     {
-        // TODO
-    }
+        if (commandParts.size() == 3)
+        {
+            std::string& path = commandParts[1];
+            std::string& target = commandParts[2];
+
+            Drive* driveFrom;
+            unsigned int chankIndexFrom; // directory of the entity
+            unsigned int chankIndexEntity; // the entity
+            std::vector<unsigned int> pathInChanks;
+            std::optional<unsigned char> entityIndexOptional;
+
+            EntityType type = GetEntity(path, driveFrom, chankIndexFrom, pathInChanks, entityIndexOptional);
+            if (type != EntityType::NotExists)
+            {
+                if (pathInChanks.empty())
+                {
+                    std::cout << "Can't move drive.\n";
+                    return;
+                }
+
+                if (pathInChanks.size() == 1)
+                {
+                    chankIndexFrom = 0;
+                }
+                else
+                {
+                    chankIndexFrom = pathInChanks[pathInChanks.size() - 2];
+                }
+
+                chankIndexEntity = pathInChanks[pathInChanks.size() - 1];
+
+                // md target
+                Drive* driveTo;
+                unsigned int chankIndexTo;
+
+                bool found;
+                if (type == EntityType::Directory)
+                {
+                    found = CreateDirectory(target, false, driveFrom, chankIndexEntity, HelpMove, driveTo, chankIndexTo);
+                }
+                else
+                {
+                    found = CreateDirectory(target, false, HelpMove, driveTo, chankIndexTo);
+                }
+
+                if (found)
+                {
+                    if (driveFrom == driveTo && (chankIndexFrom == chankIndexTo || chankIndexEntity == chankIndexTo))
+                    {
+                        std::cout << "The path can't be same as the target.\n";
+                        return;
+                    }
+
+                    CopyEntity(driveFrom, chankIndexEntity, driveTo, chankIndexTo);
+                }
+            }
+            else
+            {
+                std::cout << "The directory or file \"" << path << "\" not found.\n";
+                return;
+            }
+        }
+        else
+        {
+            HelpCopy();
+        }
+   }
 
     static void CommandRename_Rename(Drive*& drive, std::vector<unsigned int>& pathInChanks,
         EntityType& type, std::optional<unsigned char>& entityIndex, unsigned int chankIndex, EntityName& newName)
@@ -2429,14 +2528,14 @@ namespace VirtualComputer::Commands
         }
         else if (!action.compare("copy"))
         {
-        if (helpMode)
-        {
-            HelpCopy();
-        }
-        else
-        {
-            CommandMove(command, commandParts);
-        }
+            if (helpMode)
+            {
+                HelpCopy();
+            }
+            else
+            {
+                CommandCopy(command, commandParts);
+            }
         }
         else if (!action.compare("rename"))
         {
