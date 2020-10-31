@@ -3,10 +3,6 @@
 
 #include "Utils/Directory.h"
 
-#include "Directory.h"
-#include "File.h"
-#include "ErrorMessages.h"
-
 namespace VirtualComputer
 {
     static const char* DIVERS_PATH = "drvies";
@@ -41,7 +37,8 @@ namespace VirtualComputer
 
             if (Utils::File::Exists(drivePath.c_str()))
             {
-                s_Drives[i] = new Drive(drivePath, driveName);
+                HardDrive* hardDrive = new HardDrive(drivePath);
+                s_Drives[i] = new Drive(hardDrive, driveName);
                 s_DrivesActives++;
 
                 if (Drive::s_DriveCurrent == nullptr)
@@ -115,7 +112,8 @@ namespace VirtualComputer
 
         char driveName = (char)('A' + index);
 
-        Drive* drive = new Drive(drivePath, driveName);
+        HardDrive* hardDrive = new HardDrive(drivePath);
+        Drive* drive = new Drive(hardDrive, driveName);
 
         s_Drives[index] = drive;
         s_DrivesActives++;
@@ -147,9 +145,7 @@ namespace VirtualComputer
             return 0;
         }
 
-        drive->m_FileStream.Close();
-
-        if (Utils::File::Delete(drive->m_DrivePath.c_str()))
+        if (drive->m_Drive->Delete())
         {
             delete drive;
             Drive::s_Drives[index] = nullptr;
@@ -157,9 +153,6 @@ namespace VirtualComputer
         }
         else
         {
-            drive->m_FileStream.Open(drive->m_DrivePath);
-
-            std::cout << "Can't delete the real file of the drive!\n";
             return 0;
         }
 
@@ -195,409 +188,8 @@ namespace VirtualComputer
     }
 
     // None-Static
-    void Drive::GoToChank(unsigned int chankIndex, size_t indexInTheChank)
+    void Drive::GoToThisChankBody(size_t indexInTheChank)
     {
-        m_FileStream.ChangeIndex(Drive::ChankToFileIndex(chankIndex) + indexInTheChank);
-    }
-
-    // Generate and Delete Chanks
-    unsigned int Drive::GenerateChank()
-    {
-        size_t originStreamFileIndex = m_FileStream.GetIndex();
-
-        unsigned int chankIndex;
-        if (m_DeletedMemoryList.Index > 0)
-        {
-            // Give Deleted Chank
-            m_DeletedMemoryList.Index--;
-
-            chankIndex = m_DeletedMemoryList.List[m_DeletedMemoryList.Index];
-            m_DeletedMemoryList.List[m_DeletedMemoryList.Index] = 0;
-
-            GoToChank(m_DeletedMemoryList.ChankIndex, m_DeletedMemoryList.Index * 4);
-            m_FileStream.Write<unsigned int>(0);
-        }
-        else
-        {
-            if (m_DeletedMemoryList.ChankIndex != 1)
-            {
-                // Give DeletedMemoryList Chank
-                chankIndex = m_DeletedMemoryList.ChankIndex;
-
-                m_DeletedMemoryListChanks.pop_back();
-
-                m_DeletedMemoryList.ChankIndex = m_DeletedMemoryListChanks[m_DeletedMemoryListChanks.size() - 1];
-                m_DeletedMemoryList.Index = DELETED_MEMORY_LIST_SIZE;
-
-                GoToChank(m_DeletedMemoryList.ChankIndex);
-
-                m_FileStream.Read(m_DeletedMemoryList.List);
-
-                m_FileStream.Write<unsigned int>(0);
-                m_DeletedMemoryList.NextDeletedMemoryList = 0;
-            }
-            else
-            {
-                // Generate new Chank
-                chankIndex = m_ChanksCount;
-                m_ChanksCount++;
-            }
-        }
-
-        m_FileStream.ChangeIndex(originStreamFileIndex);
-
-        return chankIndex;
-    }
-
-    void Drive::DeleteChank(unsigned int chankIndex)
-    {
-        size_t originStreamFileIndex = m_FileStream.GetIndex();
-
-        if (m_DeletedMemoryList.Index < DELETED_MEMORY_LIST_SIZE)
-        {
-            m_DeletedMemoryList.List[m_DeletedMemoryList.Index] = chankIndex;
-            GoToChank(m_DeletedMemoryList.ChankIndex, m_DeletedMemoryList.Index * 4);
-            m_FileStream.Write(chankIndex);
-            m_DeletedMemoryList.Index++;
-        }
-        else
-        {
-            unsigned int newChankIndex = m_ChanksCount;
-            m_ChanksCount++;
-
-            // Update NextDeletedMemoryList
-            GoToChank(m_DeletedMemoryList.ChankIndex, m_DeletedMemoryList.Index * 4);
-            m_FileStream.Write(newChankIndex);
-
-            // In the new Chank
-            m_DeletedMemoryListChanks.push_back(newChankIndex);
-
-            m_DeletedMemoryList.ChankIndex = newChankIndex;
-            m_DeletedMemoryList.List[0] = chankIndex;
-            m_DeletedMemoryList.Index = 1;
-            std::fill(&m_DeletedMemoryList.List[1], &m_DeletedMemoryList.List[DELETED_MEMORY_LIST_SIZE], 0);
-            m_DeletedMemoryList.NextDeletedMemoryList = 0;
-
-            GoToChank(newChankIndex);
-            m_FileStream.Write(m_DeletedMemoryList.List);
-            m_FileStream.Write(m_DeletedMemoryList.NextDeletedMemoryList);
-        }
-
-        m_FileStream.ChangeIndex(originStreamFileIndex);
-
-        Logger::Info("Chank ", chankIndex, " deleted.");
-    }
-
-    // Body Actions
-    void Drive::LoadBody()
-    {
-        // Laod Directories and Files
-        GoToChank(m_ChankIndex);
-        m_DirectoriesCount = m_FileStream.Read<unsigned char>();
-        m_FileStream.Read((char*)m_DirectoriesLocations, MAX_DIRECTORIES);
-
-        for (unsigned char i = 0; i < m_DirectoriesCount; i++)
-        {
-            GoToChank(m_DirectoriesLocations[i]);
-            m_DirectoriesNames[i].LoadName(m_FileStream);
-        }
-
-        GoToChank(m_ChankIndex, 1 + MAX_DIRECTORIES * 4);
-        m_FilesCount = m_FileStream.Read<unsigned char>();
-        m_FileStream.Read((char*)m_FilesLocations, MAX_FILES);
-
-        for (unsigned char i = 0; i < m_FilesCount; i++)
-        {
-            GoToChank(m_FilesLocations[i]);
-            m_FilesNames[i].LoadName(m_FileStream);
-        }
-    }
-
-    bool Drive::ExistName(const EntityName& name)
-    {
-        for (unsigned char i = 0; i < m_DirectoriesCount; i++)
-        {
-            if (m_DirectoriesNames[i].IsEqual(name))
-            {
-                return true;
-            }
-        }
-
-        for (unsigned char i = 0; i < m_FilesCount; i++)
-        {
-            if (m_FilesNames[i].IsEqual(name))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // Directories Actions
-    unsigned int Drive::CreateDirectory(const EntityName& name, const char*& error)
-    {
-        error = nullptr;
-        if (m_DirectoriesCount == MAX_DIRECTORIES)
-        {
-            error = ErrorMessages::MaxDirectories;
-            return 0;
-        }
-
-        if (!Drive::CheakEntityName(name))
-        {
-            return 0;
-        }
-
-        if (ExistName(name))
-        {
-            error = ErrorMessages::NameAlreadyExist;
-            return 0;
-        }
-
-        unsigned int chankIndex = GenerateChank();
-        Logger::Info("Drive ", m_DriveName, ": Generate Chank ", chankIndex, " for Directory \"", &name[0], "\"");
-
-        AddEntity(EntityType::Directory, chankIndex, name);
-
-        GoToChank(chankIndex);
-
-        m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
-        std::array<char, CHANK_SIZE - MAX_ENTITY_NAME> data;
-        data.fill(0);
-        m_FileStream.Write(&data[0], data.size());
-
-        return chankIndex;
-    }
-
-    void Drive::DeleteDirectory(unsigned char directoryIndex)
-    {
-        unsigned int chankIndex = m_DirectoriesLocations[directoryIndex];
-
-        Directory directory(chankIndex, this);
-        directory.Delete();
-
-        DeleteChank(chankIndex);
-
-        RemoveEntity(EntityType::Directory, directoryIndex);
-    }
-
-    void Drive::RenameDirectory(std::optional<unsigned char>& directoryIndex, unsigned int chankIndex, const EntityName& name, const char*& error)
-    {
-        error = nullptr;
-        for (unsigned char i = 0; i < m_FilesCount; i++)
-        {
-            if (m_FilesNames[i].IsEqual(name))
-            {
-                error = ErrorMessages::NameAlreadyExist;
-                return;
-            }
-        }
-
-        for (unsigned char i = 0; i < m_DirectoriesCount; i++)
-        {
-            if (m_DirectoriesNames[i].IsEqual(name))
-            {
-                if (i != directoryIndex)
-                {
-                    error = ErrorMessages::NameAlreadyExist;
-                }
-                return;
-            }
-
-            if (!directoryIndex.has_value() && chankIndex == m_DirectoriesLocations[i])
-            {
-                directoryIndex.emplace(i);
-            }
-        }
-
-        m_DirectoriesNames[directoryIndex.value()].Change(name);
-
-        GoToChank(chankIndex);
-        m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
-    }
-
-    // Files Actions
-    unsigned int Drive::CreateFile(const EntityName& name, char* content, size_t size, const char*& error)
-    {
-        error = nullptr;
-        if (m_FilesCount == MAX_FILES)
-        {
-            error = ErrorMessages::MaxFiles;
-            return 0;
-        }
-
-        if (!Drive::CheakEntityName(name))
-        {
-            return 0;
-        }
-
-        if (ExistName(name))
-        {
-            error = ErrorMessages::NameAlreadyExist;
-            return 0;
-        }
-
-        unsigned int chankIndex = File::Create(this, name, content, size);
-
-        AddEntity(EntityType::File, chankIndex, name);
-
-        return chankIndex;
-    }
-
-    void Drive::DeleteFile(unsigned char fileIndex)
-    {
-        unsigned int chankIndex = m_FilesLocations[fileIndex];
-
-        File::DeleteFile(this, chankIndex);
-
-        RemoveEntity(EntityType::File, fileIndex);
-    }
-
-    void Drive::RenameFile(unsigned char fileIndex, const EntityName& name, const char*& error)
-    {
-        error = nullptr;
-        for (unsigned char i = 0; i < m_DirectoriesCount; i++)
-        {
-            if (m_DirectoriesNames[i].IsEqual(name))
-            {
-                error = ErrorMessages::NameAlreadyExist;
-                return;
-            }
-        }
-
-        for (unsigned char i = 0; i < m_FilesCount; i++)
-        {
-            if (m_FilesNames[i].IsEqual(name))
-            {
-                if (i != fileIndex)
-                {
-                    error = ErrorMessages::NameAlreadyExist;
-                }
-                return;
-            }
-        }
-
-        unsigned int chankIndex = m_FilesLocations[fileIndex];
-        m_FilesNames[fileIndex].Change(name);
-
-        GoToChank(chankIndex);
-        m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
-    }
-
-    // Add and Remove
-    void Drive::AddEntity(const EntityType& type, const unsigned int& chankIndex, const EntityName& name)
-    {
-        if (type == EntityType::Directory)
-        {
-            unsigned char index = m_DirectoriesCount;
-            GoToChank(m_ChankIndex);
-
-            m_DirectoriesCount++;
-            m_FileStream.Write(m_DirectoriesCount);
-
-            m_DirectoriesLocations[index] = chankIndex;
-            m_DirectoriesNames[index].Change(name);
-            m_FileStream += index * 4;
-            m_FileStream.Write(m_DirectoriesLocations[index]);
-        }
-        else // File
-        {
-            m_FilesLocations[m_FilesCount] = chankIndex;
-            m_FilesNames[m_FilesCount] = name;
-
-            m_FilesCount++;
-
-            GoToChank(m_ChankIndex, 1 + MAX_DIRECTORIES * 4);
-            m_FileStream.Write(m_FilesCount);
-            m_FileStream += (m_FilesCount - 1) * 4;
-            m_FileStream.Write(chankIndex);
-        }
-    }
-
-    void Drive::RemoveEntity(const EntityType& type, const unsigned char& entityIndex)
-    {
-        if (type == EntityType::Directory)
-        {
-            m_DirectoriesCount--;
-
-            GoToChank(m_ChankIndex);
-            m_FileStream.Write(m_DirectoriesCount);
-
-            unsigned char lastIndex = m_DirectoriesCount;
-            if (entityIndex != lastIndex)
-            {
-                m_DirectoriesLocations[entityIndex] = m_DirectoriesLocations[lastIndex];
-                m_DirectoriesNames[entityIndex] = m_DirectoriesNames[lastIndex];
-
-                m_FileStream += entityIndex * 4;
-                m_FileStream.Write<unsigned int>(m_DirectoriesLocations[entityIndex]);
-                m_FileStream -= entityIndex * 4;
-            }
-
-            m_DirectoriesLocations[lastIndex] = 0;
-            m_DirectoriesNames[lastIndex].Clear();
-
-            m_FileStream += lastIndex * 4;
-            m_FileStream.Write<unsigned int>(0);
-        }
-        else // File
-        {
-            m_FilesCount--;
-
-            GoToChank(m_ChankIndex, 1 + MAX_DIRECTORIES * 4);
-            m_FileStream.Write(m_FilesCount);
-
-            unsigned char lastIndex = m_FilesCount;
-            if (entityIndex != lastIndex)
-            {
-                m_FilesLocations[entityIndex] = m_FilesLocations[lastIndex];
-                m_FilesNames[entityIndex] = m_FilesNames[lastIndex];
-
-                m_FileStream += entityIndex * 4;
-                m_FileStream.Write<unsigned int>(m_FilesLocations[entityIndex]);
-                m_FileStream -= entityIndex * 4;
-            }
-
-            m_FilesLocations[lastIndex] = 0;
-            m_FilesNames[lastIndex].Clear();
-
-            m_FileStream += lastIndex * 4;
-            m_FileStream.Write<unsigned int>(0);
-        }
-    }
-
-    void Drive::RemoveEntity(const EntityType& type, const std::optional<unsigned char> entityIndexOptional, const unsigned int& chankIndex)
-    {
-        if (entityIndexOptional.has_value())
-        {
-            RemoveEntity(type, entityIndexOptional.value());
-        }
-        else
-        {
-            unsigned char entityIndex;
-            if (type == EntityType::Directory)
-            {
-                for (unsigned char i = 0; i < m_DirectoriesCount; i++)
-                {
-                    if (m_DirectoriesLocations[i] == chankIndex)
-                    {
-                        RemoveEntity(type, i);
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                for (unsigned char i = 0; i < m_FilesCount; i++)
-                {
-                    if (m_FilesLocations[i] == chankIndex)
-                    {
-                        RemoveEntity(type, i);
-                        return;
-                    }
-                }
-            }
-        }
+        m_Drive->GoToChank(m_ChankIndex, 0 + indexInTheChank);
     }
 }

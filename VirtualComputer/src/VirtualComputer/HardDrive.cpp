@@ -6,9 +6,6 @@
 
 namespace VirtualComputer
 {
-    static const char* DIVERS_PATH = "drvies";
-    static const char* DIVER_EXTENSION = ".vhd";
-
     // Static
     constexpr size_t HardDrive::ChankToFileIndex(const unsigned int& chankIndex)
     {
@@ -19,6 +16,23 @@ namespace VirtualComputer
     }
 
     // None-Static
+    bool HardDrive::Delete()
+    {
+        m_FileStream.Close();
+
+        if (Utils::File::Delete(m_DrivePath.c_str()))
+        {
+            return true;
+        }
+        else
+        {
+            m_FileStream.Open(m_DrivePath);
+
+            std::cout << "Can't delete the real file of the drive!\n";
+            return false;
+        }
+    }
+
     void HardDrive::GoToChank(unsigned int chankIndex, size_t indexInTheChank)
     {
         m_FileStream.ChangeIndex(HardDrive::ChankToFileIndex(chankIndex) + indexInTheChank);

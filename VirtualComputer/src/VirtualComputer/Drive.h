@@ -29,40 +29,24 @@ namespace VirtualComputer
 		char m_DriveName;
 
 	public:
-		Drive(HardDrive* hardDive, char driveName)
-			: m_DriveName(driveName)
+		Drive(HardDrive* hardDrive, char driveName)
+			: DirectoryBody(0, hardDrive), m_DriveName(driveName)
 		{
-			m_Drive = hardDive;
-			m_ChankIndex = 0;
 			LoadBody();
 		}
 
-		void GoToThisChank(unsigned int chankIndex, size_t indexInTheChank = 0);
+		~Drive()
+		{
+			if (m_Drive != nullptr)
+			{
+				if (m_Drive->m_FileStream.IsOpened())
+				{
+					m_Drive->m_FileStream.Close();
+				}
+				delete m_Drive;
+			}
+		}
 
-		unsigned int GenerateChank();
-
-		void DeleteChank(unsigned int chankIndex);
-
-		void LoadBody();
-
-		bool ExistName(const EntityName& name);
-
-		unsigned int CreateDirectory(const EntityName& name, const char*& error);
-
-		void DeleteDirectory(unsigned char directoryIndex);
-
-		void RenameDirectory(std::optional<unsigned char>& directoryIndex, unsigned int chankIndex, const EntityName& name, const char*& error);
-
-		unsigned int CreateFile(const EntityName& name, char* content, size_t size, const char*& error);
-
-		void DeleteFile(unsigned char fileIndex);
-
-		void RenameFile(unsigned char fileIndex, const EntityName& name, const char*& error);
-
-		void AddEntity(const EntityType& type, const unsigned int& chankIndex, const EntityName& name);
-
-		void RemoveEntity(const EntityType& type, const unsigned char& entityIndex);
-
-		void RemoveEntity(const EntityType& type, const std::optional<unsigned char> entityIndexOptional, const unsigned int& chankIndex);
+		void GoToThisChankBody(size_t indexInTheChank = 0) override;
 	};
 }

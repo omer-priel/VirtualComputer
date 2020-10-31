@@ -63,6 +63,8 @@ namespace VirtualComputer
 			}
 		}
 
+		bool Delete();
+
 		void GoToChank(unsigned int chankIndex, size_t indexInTheChank = 0);
 
 		unsigned int GenerateChank();

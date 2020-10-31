@@ -1,57 +1,12 @@
 #include "pch.h"
 #include "Directory.h"
 
-#include "File.h"
-#include "ErrorMessages.h"
-#include "EntityType.h";
-
 namespace VirtualComputer
 {
     // None-Static
-    void Directory::LoadBody()
+    void Directory::GoToThisChankBody(size_t indexInTheChank)
     {
-        m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME);
-
-        // Laod Directories and Files
-        m_DirectoriesCount = m_Drive->m_FileStream.Read<unsigned char>();
-        m_Drive->m_FileStream.Read((char*)m_DirectoriesLocations, MAX_DIRECTORIES);
-
-        for (unsigned char i = 0; i < m_DirectoriesCount; i++)
-        {
-            m_Drive->GoToChank(m_DirectoriesLocations[i]);
-            m_DirectoriesNames[i].LoadName(m_Drive->m_FileStream);
-        }
-
-        m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + 1 + MAX_DIRECTORIES * 4);
-        m_FilesCount = m_Drive->m_FileStream.Read<unsigned char>();
-        m_Drive->m_FileStream.Read((char*)m_FilesLocations, MAX_FILES);
-
-        for (unsigned char i = 0; i < m_FilesCount; i++)
-        {
-            m_Drive->GoToChank(m_FilesLocations[i]);
-            m_FilesNames[i].LoadName(m_Drive->m_FileStream);
-        }
-    }
-
-    bool Directory::ExistName(const EntityName& name)
-    {
-        for (unsigned char i = 0; i < m_DirectoriesCount; i++)
-        {
-            if (m_DirectoriesNames[i].IsEqual(name))
-            {
-                return true;
-            }
-        }
-
-        for (unsigned char i = 0; i < m_FilesCount; i++)
-        {
-            if (m_FilesNames[i].IsEqual(name))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        m_Drive->GoToChank(m_ChankIndex, MAX_ENTITY_NAME + indexInTheChank);
     }
 
     // Directories Actions
