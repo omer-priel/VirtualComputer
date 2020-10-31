@@ -2,7 +2,7 @@
 
 #include "MemoryEntity.h"
 #include "SmartEntityName.h"
-#include "Drive.h"
+#include "HardDrive.h"
 
 namespace VirtualComputer
 {
@@ -17,12 +17,12 @@ namespace VirtualComputer
 
 		// Static
 	public:
-		static unsigned int Create(Drive* drive, const EntityName& name, char* content, size_t size);
-		static void DeleteFile(Drive* drive, unsigned int chankIndex);
+		static unsigned int Create(HardDrive* drive, const EntityName& name, char* content, size_t size);
+		static void DeleteFile(HardDrive* drive, unsigned int chankIndex);
 
 		// None-Static
 	private:
-		Drive* m_Drive;
+		HardDrive* m_Drive;
 
 	public:
 		SmartEntityName m_Name;
@@ -31,7 +31,7 @@ namespace VirtualComputer
 		char m_FirstBodyChank[FIRST_FILE_BODY_SIZE];
 		std::vector<FileBodyChank*> m_BodyChanks;
 
-		File(unsigned int chankIndex, Drive* drive)
+		File(unsigned int chankIndex, HardDrive* drive)
 			: m_Drive(drive)
 		{
 			m_ChankIndex = chankIndex;

@@ -212,7 +212,7 @@ namespace VirtualComputer
             return 0;
         }
 
-        if (!Drive::CheakEntityName(name))
+        if (!DirectoryBody::CheakEntityName(name))
         {
             return 0;
         }
@@ -306,4 +306,77 @@ namespace VirtualComputer
     }
 
     // Files Actions
+    unsigned int DirectoryBody::CreateFile(const EntityName& name, char* content, size_t size, const char*& error)
+    {
+        error = nullptr;
+        if (m_FilesCount == MAX_FILES)
+        {
+            error = ErrorMessages::MaxFiles;
+            return 0;
+        }
+
+        if (!DirectoryBody::CheakEntityName(name))
+        {
+            return 0;
+        }
+
+        if (ExistName(name))
+        {
+            error = ErrorMessages::NameAlreadyExist;
+            return 0;
+        }
+
+        unsigned int chankIndex = File::Create(m_Drive, name, content, size);
+
+        AddEntity(EntityType::File, chankIndex, name);
+
+        return chankIndex;
+    }
+
+    void DirectoryBody::DeleteFile(unsigned char fileIndex, const bool& first)
+    {
+        unsigned int chankIndex = m_FilesLocations[fileIndex];
+
+        File::DeleteFile(m_Drive, chankIndex);
+
+        if (first)
+        {
+            RemoveEntity(EntityType::File, fileIndex);
+        }
+        else
+        {
+            m_FilesCount--;
+        }
+    }
+
+    void DirectoryBody::RenameFile(unsigned char fileIndex, const EntityName& name, const char*& error)
+    {
+        error = nullptr;
+        for (unsigned char i = 0; i < m_DirectoriesCount; i++)
+        {
+            if (m_DirectoriesNames[i].IsEqual(name))
+            {
+                error = ErrorMessages::NameAlreadyExist;
+                return;
+            }
+        }
+
+        for (unsigned char i = 0; i < m_FilesCount; i++)
+        {
+            if (m_FilesNames[i].IsEqual(name))
+            {
+                if (i != fileIndex)
+                {
+                    error = ErrorMessages::NameAlreadyExist;
+                }
+                return;
+            }
+        }
+
+        unsigned int chankIndex = m_FilesLocations[fileIndex];
+        m_FilesNames[fileIndex].Change(name);
+
+        m_Drive->GoToChank(chankIndex);
+        m_Drive->m_FileStream.Write(&name[0], MAX_ENTITY_NAME);
+    }
 }
