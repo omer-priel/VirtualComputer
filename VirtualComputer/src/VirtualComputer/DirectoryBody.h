@@ -28,6 +28,11 @@ namespace VirtualComputer
 		unsigned int m_FilesLocations[MAX_DIRECTORIES];
 		SmartEntityName m_FilesNames[MAX_DIRECTORIES];
 
+		DirectoryBody()
+		{
+
+		}
+
 		DirectoryBody(const unsigned int& chankIndex, HardDrive* drive)
 			: m_Drive(drive)
 		{
