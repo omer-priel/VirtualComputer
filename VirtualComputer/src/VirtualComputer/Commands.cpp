@@ -1022,7 +1022,52 @@ namespace VirtualComputer::Commands
     static void CopyDirectory(HardDrive*& driveFrom, const unsigned int& chankIndexEntity,
         HardDrive*& driveTo, const unsigned int& chankIndexTarget)
     {
+        Chank data;
+        data.fill(0);
 
+        // Read
+        char name[MAX_ENTITY_NAME];
+        unsigned char directoriesCount;
+        unsigned int directories[MAX_DIRECTORIES];
+        unsigned char filesCount;
+        unsigned int files[MAX_FILES];
+
+        driveFrom->GoToChank(chankIndexEntity);
+        driveFrom->m_FileStream.Read(name, MAX_ENTITY_NAME);
+        driveFrom->m_FileStream.Read<unsigned char>(directoriesCount);
+        driveFrom->m_FileStream.Read((char*)directories, MAX_DIRECTORIES * 4);
+        driveFrom->m_FileStream.Read<unsigned char>(filesCount);
+        driveFrom->m_FileStream.Read((char*)files, MAX_FILES * 4);
+
+        // Write
+        driveTo->GoToChank(chankIndexTarget);
+        driveTo->m_FileStream.Write(name, MAX_ENTITY_NAME);
+        
+        driveTo->m_FileStream.Write(directoriesCount);
+        for (size_t i = 0; i < directoriesCount; i++)
+        {
+            unsigned int chankIndexTarget = driveTo->GenerateChank();
+            driveTo->m_FileStream.Write<unsigned int>(chankIndexTarget);
+            
+            size_t index = driveTo->m_FileStream.GetIndex();
+            CopyDirectory(driveFrom, directories[i], driveTo, chankIndexTarget);
+            driveTo->m_FileStream.ChangeIndex(index);
+        }
+
+        driveTo->m_FileStream.Write(&data[0], (MAX_DIRECTORIES - directoriesCount) * 4);
+
+        driveTo->m_FileStream.Write(filesCount);
+        for (size_t i = 0; i < filesCount; i++)
+        {
+            unsigned int chankIndexTarget = driveTo->GenerateChank();
+            driveTo->m_FileStream.Write<unsigned int>(chankIndexTarget);
+
+            size_t index = driveTo->m_FileStream.GetIndex();
+            CopyFile(driveFrom, files[i] , driveTo, chankIndexTarget);
+            driveTo->m_FileStream.ChangeIndex(index);
+        }
+
+        driveTo->m_FileStream.Write(&data[0], (MAX_FILES - filesCount) * 4);
     }
     
     static bool CopyEntity(HardDrive*& driveFrom, unsigned int& chankIndexEntity, EntityType& type, HardDrive*& driveTo, DirectoryBody* target)
