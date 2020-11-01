@@ -1017,7 +1017,7 @@ namespace VirtualComputer::Commands
 
         EntityName entityName;
         driveFrom->GoToChank(chankIndexEntity);
-
+        driveFrom->m_FileStream.Read(&entityName[0], MAX_ENTITY_NAME);
 
         if (target->ExistName(entityName))
         {
