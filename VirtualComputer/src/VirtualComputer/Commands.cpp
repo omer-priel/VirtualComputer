@@ -996,6 +996,35 @@ namespace VirtualComputer::Commands
         return CreateDirectory(path, cantBeExist, help, drive, chankIndex);
     }
 
+    static void CopyFile(HardDrive*& driveFrom, const unsigned int& chankIndexEntity,
+        HardDrive*& driveTo, const unsigned int& chankIndexTarget)
+    {
+        driveFrom->GoToChank(chankIndexEntity);
+        File file(chankIndexTarget, driveFrom);
+
+        driveTo->GoToChank(chankIndexTarget);
+        
+        driveTo->m_FileStream.Write(&file.m_Name.m_Name[0], MAX_ENTITY_NAME);
+        driveTo->m_FileStream.Write<unsigned int>(file.m_Size);
+        driveTo->m_FileStream.Write(file.m_FirstBodyChank, FIRST_FILE_BODY_SIZE);
+        for (auto& chank : file.m_BodyChanks)
+        {
+            unsigned nextChankIndex = driveTo->GenerateChank();
+            driveTo->m_FileStream.Write<unsigned int>(nextChankIndex);
+
+            driveTo->GoToChank(nextChankIndex);
+
+            driveTo->m_FileStream.Write(chank->Body, CHANK_SIZE - 4);
+        }
+        driveTo->m_FileStream.Write<unsigned int>(0);
+    }
+    
+    static void CopyDirectory(HardDrive*& driveFrom, const unsigned int& chankIndexEntity,
+        HardDrive*& driveTo, const unsigned int& chankIndexTarget)
+    {
+
+    }
+    
     static bool CopyEntity(HardDrive*& driveFrom, unsigned int& chankIndexEntity, EntityType& type, HardDrive*& driveTo, DirectoryBody* target)
     {
         if (type == EntityType::Directory)
@@ -1026,7 +1055,16 @@ namespace VirtualComputer::Commands
         }
 
         // Copy
-        Logger::Debug("COPY ", chankIndexEntity, " to ", target->m_ChankIndex);
+        unsigned int chankIndexTarget = driveTo->GenerateChank();
+        target->AddEntity(type, chankIndexTarget, entityName);
+        if (type == EntityType::Directory)
+        {
+            CopyDirectory(driveFrom, chankIndexEntity, driveTo, chankIndexTarget);
+        }
+        else // File
+        {
+            CopyFile(driveFrom, chankIndexEntity, driveTo, chankIndexTarget);
+        }
     }
 
     static bool CopyEntity(Drive*& driveFrom, unsigned int& chankIndexEntity, EntityType& type, Drive*&  driveTo, unsigned int&  chankIndexTo)
