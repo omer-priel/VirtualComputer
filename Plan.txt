@@ -1,11 +1,9 @@
-Drive = file
-Path = Drive:/DirectoryNames.../FileName
-
 Names:
     Drive, Directory, File, Path
     Entity = Directory or File.
     Chank = Area of bytes on the drive.
-    Location = ChankId
+    Location = ChankIndex
+
 Settings:
     MAX_DRIVES 26
     MAX_DIRECTORIES = 255
@@ -14,14 +12,20 @@ Settings:
     POINTER sizeof(unsigned int)
     MAX_FILE_SIZE sizeof(unsigned int)
     CHANK_SIZE = Directory Size
+
+Virtual Drive File Structure:
+
+First Chank = Drive
+Second Chank = First "DeletedMemoryList"
+
 Drive:
     Drive = CHANK_SIZE - MAX_ENTITY_NAME
-        like Directory without CHANK_SIZE
+        like Directory without Name
 
 Directory = CHANK_SIZE
-    DirectoryName [MAX_ENTITY_NAME]
+    DirectoryName (MAX_ENTITY_NAME Bytes)
     DirectoriesCount MAX_DIRECTORIES
-    DirectoriesLocations POINTER[MAX_DIRECTORIES]
+    DirectoriesLocations [MAX_DIRECTORIES]
     FilesCount MAX_FILES
     FilesLocations [MAX_FILES]
 

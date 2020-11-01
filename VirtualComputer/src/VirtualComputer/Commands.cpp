@@ -1000,7 +1000,7 @@ namespace VirtualComputer::Commands
         HardDrive*& driveTo, const unsigned int& chankIndexTarget)
     {
         driveFrom->GoToChank(chankIndexEntity);
-        File file(chankIndexTarget, driveFrom);
+        File file(chankIndexEntity, driveFrom);
 
         driveTo->GoToChank(chankIndexTarget);
         
@@ -1110,6 +1110,8 @@ namespace VirtualComputer::Commands
         {
             CopyFile(driveFrom, chankIndexEntity, driveTo, chankIndexTarget);
         }
+
+        return true;
     }
 
     static bool CopyEntity(Drive*& driveFrom, unsigned int& chankIndexEntity, EntityType& type, Drive*&  driveTo, unsigned int&  chankIndexTo)
@@ -1148,6 +1150,11 @@ namespace VirtualComputer::Commands
             << "        command - displays help information on that command.\n";
     }
     
+    static void HelpExit()
+    {
+        std::cout << "Quits the Virtual Computer.\n";
+    }
+
     static void HelpDrives()
     {
         std::cout
@@ -1280,6 +1287,16 @@ namespace VirtualComputer::Commands
             << "        size - The new size of the file\n"
             << "    rd [path] [/c | /clean] - Clean file.\n"
             << "        path - Path of the file\n";
+    }
+
+    static void HelpEcho()
+    {
+        std::cout << "Displays messages.\n";
+    }
+
+    static void HelpClear()
+    {
+        std::cout << "Clear the window.\n";
     }
 
     // commands functions
@@ -2528,6 +2545,16 @@ namespace VirtualComputer::Commands
         }
     }
 
+    static void CommandEcho(std::string& command, std::vector<std::string>& commandParts)
+    {
+        int i = command.find("echo") + 5;
+
+        if (i < command.size())
+        {
+            std::cout << (char*)(command.c_str() + i) << "\n"; \
+        }
+    }
+
     // DoCommand
     static bool DoCommand(std::string& command, std::vector<std::string>& commandParts)
     {
@@ -2547,18 +2574,7 @@ namespace VirtualComputer::Commands
             }
         }
 
-        if (!action.compare("exit"))
-        {
-            if (helpMode)
-            {
-                std::cout << "Quits the Virtual Computer.\n";
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else if (!action.compare("help"))
+        if (!action.compare("help"))
         {
             if (helpMode)
             {
@@ -2567,6 +2583,18 @@ namespace VirtualComputer::Commands
             else
             {
                 Help();
+            }
+        }
+        
+        else if (!action.compare("exit"))
+        {
+            if (helpMode)
+            {
+                HelpExit();
+            }
+            else
+            {
+                return false;
             }
         }
         else if (!action.compare("drives"))
@@ -2705,23 +2733,18 @@ namespace VirtualComputer::Commands
         {
             if (helpMode)
             {
-                std::cout << "Displays messages.\n";
+                HelpEcho();
             }
             else
             {
-                int i = command.find("echo") + 5;
-
-                if (i < command.size())
-                {
-                    std::cout << (char*)(command.c_str() + i) << "\n"; \
-                }
+                CommandEcho(command, commandParts);
             }
         }
         else if (!action.compare("clear"))
         {
             if (helpMode)
             {
-                std::cout << "Clear the window.\n";
+                HelpClear();
             }
             else
             {
@@ -2898,12 +2921,6 @@ namespace VirtualComputer::Commands
     {
         User::s_CurrentDirectory.directory = Drive::s_DriveCurrent;
         User::s_CurrentDirectory.Change();
-
-        DoCommand("md a/b/c");
-        DoCommand("md A/B/C");
-        DoCommand("md dir");
-        DoCommand("mf file");
-        DoCommand("clear");
     }
 
     void Loop()
@@ -2911,7 +2928,7 @@ namespace VirtualComputer::Commands
         bool running = true;
         while (running)
         {
-            PrintDrive(true);
+            //PrintDrive(true);
             
             // Get Command
             std::string command;

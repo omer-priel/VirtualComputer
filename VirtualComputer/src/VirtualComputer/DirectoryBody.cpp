@@ -146,6 +146,8 @@ namespace VirtualComputer
         }
         else // File
         {
+            m_FilesCount--;
+
             GoToThisChankBody(1 + MAX_DIRECTORIES * 4);
             m_Drive->m_FileStream.Write(m_FilesCount);
 

@@ -25,4 +25,3 @@ echo - Print text
 clear - Clear the window
 
 * If not exist derive, create drive
-* Can open number of virtual computers in the same time. But can't open on the same drives.
