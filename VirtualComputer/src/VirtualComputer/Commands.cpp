@@ -1440,7 +1440,7 @@ namespace VirtualComputer::Commands
                 filesIndex++;
             }
 
-            if (directory->m_ChankIndex != 0)
+            if (directory->m_ChankIndex != 0 && directory != User::s_CurrentDirectory.directory)
             {
                 delete directory;
             }
