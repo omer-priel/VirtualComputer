@@ -1,12 +1,14 @@
-VirtualComputer
-Virtual Computer like CMD and is save the data on Virtual Hard Drive file (.vhd).
+# Virtual Computer
+Application based on the VM consept.
+Its work like the terminal (CMD), But save the data on custom "Virtual Hard Drive" file (.vhd).
 
-Directory Structure:
+# Directory and Files Structure:
 drives/drive0.vhd
 drives/drive1.vhd
+
 .vhd - Virtual Hard Drive
 
-Commands:
+# Commands:
 exit - Exit the program
 help - Show all the commands
 drives - Show drives list
@@ -24,4 +26,4 @@ edit - Edit file
 echo - Print text
 clear - Clear the window
 
-* If not exist derive, create drive
+* If not exist drive, create drive
